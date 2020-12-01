@@ -28,6 +28,9 @@ export class Chart3Component implements OnInit, OnChanges {
   x = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2);
   y = d3.scaleLinear();
 
+  activeSorting;
+  activeSortingIndex = false;
+
   constructor(element: ElementRef) {
     this.host = d3.select(element.nativeElement);
 
@@ -35,10 +38,12 @@ export class Chart3Component implements OnInit, OnChanges {
    }
 
   ngOnInit() {
-    this.svg = this.host.select('svg');
+    this.svg = this.host.select('svg').on('click', () => this.switchSorting());
 
     this.setDimensions();
     this.setElements();
+
+    this.activeSorting = this.alphabetical;
 
   }
 
@@ -64,7 +69,7 @@ export class Chart3Component implements OnInit, OnChanges {
   }
 
   setParams() {
-    const ids = this.data.map((d) => d.id);
+    const ids = this.data.sort(this.activeSorting).map((d) => d.id);
     this.x.domain(ids).range([0, this.innerWidth]);
     const max_salary = 1.3 * Math.max(...this.data.map((item) => item.employee_salary));
     this.y.domain([0, max_salary]).range([this.innerHeight, 0]);
@@ -77,13 +82,43 @@ export class Chart3Component implements OnInit, OnChanges {
   }
 
   draw() {
-    this.dataContainer.selectAll('rect')
-    .data(this.data || [])
-    .enter().append('rect')
+    const rects = this.dataContainer.selectAll('rect')
+    .data(this.data || [], (d) => d.id);
+
+    // update section
+    rects.attr('width', this.x.bandwidth())
+    .transition()
+    .delay((d, i) => 50 * i)
+    .attr('x', (d) => this.x(d.id))
+    .attr('y', (d) => this.y(d.employee_salary))
+    .attr('height', (d) => this.innerHeight -this.y(d.employee_salary));
+
+    // new rectangles
+    rects.enter().append('rect')
     .attr('x', (d) => this.x(d.id))
     .attr('width', this.x.bandwidth())
-    .attr('height', (d) => this.innerHeight -this.y(d.employee_salary))
-    .attr('y', (d) => this.y(d.employee_salary));
+    .attr('y', (d) => this.y(d.employee_salary))
+    .attr('height', (d) => this.innerHeight -this.y(d.employee_salary));
+
+    // remove not needed
+    rects.exit().remove();
+  }
+
+  alphabetical = (a, b) => +a.id - +b.id;
+
+  ascending = (a, b) => +a.employee_salary - +b.employee_salary;
+
+  switchSorting() {
+    this.activeSortingIndex = !this.activeSortingIndex;
+
+    if (this.activeSortingIndex) {
+      this.activeSorting = this.ascending;
+    } else {
+      this.activeSorting = this.alphabetical;
+    }
+
+    this.setParams();
+    this.draw();
   }
 
 }
