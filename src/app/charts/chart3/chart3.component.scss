@@ -1,1 +1,10 @@
 
+.text-button{
+  font-size: 12px;
+  transition: all 300ms;
+  text-anchor: middle;
+  cursor: pointer;
+  &:hover {
+    font-size: 14px;
+  }
+ }
