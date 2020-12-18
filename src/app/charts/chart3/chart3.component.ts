@@ -10,6 +10,7 @@ import * as d3 from 'd3';
 export class Chart3Component implements OnInit, OnChanges {
   host: any;
   svg: any;
+  dataContainer: any;
 
   @Input() data;
 
@@ -31,6 +32,13 @@ export class Chart3Component implements OnInit, OnChanges {
 
   ngOnInit() {
     this.svg = this.host.select('svg');
+    this.dataContainer = this.svg.append('g').attr('class', 'dataContainer')
+    .attr('transform', `translate(${this.left}, ${this.top})`);
+
+    this.setDimensions();
+  }
+
+  setDimensions() {
     this.dimensions = this.svg.node().getBoundingClientRect();
     this.innerWidth = this.dimensions.width - this.left - this.right;
     this.innerHeight = this.dimensions.height - this.top - this.bottom;
@@ -46,17 +54,17 @@ export class Chart3Component implements OnInit, OnChanges {
     const ids = this.data.map((d) => d.id);
     this.x.domain(ids).range([this.left, this.innerWidth]);
     const max_salary = 1.3 * Math.max(...this.data.map((item) => item.employee_salary));
-    this.y.domain([0, max_salary]).range([this.dimensions.height - this.bottom, this.top]);
+    this.y.domain([0, max_salary]).range([this.innerHeight, 0]);
   }
 
   draw() {
-    this.svg.selectAll('rect')
-    .data(this.data || [])
+    this.dataContainer.selectAll('rect')
+    .data(this.data || [], (d) => d.id)
     .enter().append('rect')
     .attr('x', (d) => this.x(d.id))
     .attr('width', this.x.bandwidth())
-    .attr('height', (d) => this.dimensions.height - this.bottom -this.y(d.employee_salary))
-    .attr('y', (d) => this.y(d.employee_salary));
+    .attr('y', (d) => this.y(d.employee_salary))
+    .attr('height', (d) => this.innerHeight - this.y(d.employee_salary));
   }
 
 }
