@@ -11,6 +11,8 @@ export class Chart3Component implements OnInit, OnChanges {
   host: any;
   svg: any;
   dataContainer: any;
+  xAxisContainer: any;
+  yAxisContainer: any;
 
   @Input() data;
 
@@ -19,7 +21,9 @@ export class Chart3Component implements OnInit, OnChanges {
   dimensions: DOMRect;
   innerWidth;
   innerHeight;
-  left = 10; right = 20; bottom = 16; top = 15;
+  xAxis: any;
+  yAxis: any;
+  left = 60; right = 20; bottom = 16; top = 15;
 
   x = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2);
   y = d3.scaleLinear();
@@ -32,10 +36,19 @@ export class Chart3Component implements OnInit, OnChanges {
 
   ngOnInit() {
     this.svg = this.host.select('svg');
-    this.dataContainer = this.svg.append('g').attr('class', 'dataContainer')
-    .attr('transform', `translate(${this.left}, ${this.top})`);
 
     this.setDimensions();
+
+    this.setElements();
+  }
+
+  setElements() {
+    this.dataContainer = this.svg.append('g').attr('class', 'dataContainer')
+    .attr('transform', `translate(${this.left}, ${this.top})`);
+    this.xAxisContainer = this.svg.append('g').attr('class', 'xAxisContainer')
+    .attr('transform', `translate(${this.left}, ${this.top + this.innerHeight})`);
+    this.yAxisContainer = this.svg.append('g').attr('class', 'yAxisContainer')
+    .attr('transform', `translate(${this.left}, ${this.top})`);
   }
 
   setDimensions() {
@@ -47,12 +60,21 @@ export class Chart3Component implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if(!this.svg) return;
     this.setParams();
+    this.setAxis();
     this.draw();
+  }
+
+  setAxis() {
+    this.xAxis = d3.axisBottom(this.x);
+    this.xAxisContainer.call(this.xAxis);
+
+    this.yAxis = d3.axisLeft(this.y);
+    this.yAxisContainer.call(this.yAxis);
   }
 
   setParams() {
     const ids = this.data.map((d) => d.id);
-    this.x.domain(ids).range([this.left, this.innerWidth]);
+    this.x.domain(ids).range([0, this.innerWidth]);
     const max_salary = 1.3 * Math.max(...this.data.map((item) => item.employee_salary));
     this.y.domain([0, max_salary]).range([this.innerHeight, 0]);
   }
