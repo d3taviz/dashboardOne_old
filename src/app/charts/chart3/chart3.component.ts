@@ -23,7 +23,7 @@ export class Chart3Component implements OnInit, OnChanges {
   innerHeight;
   xAxis: any;
   yAxis: any;
-  left = 60; right = 20; bottom = 16; top = 15;
+  left = 60; right = 20; bottom = 80; top = 15;
 
   x = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2);
   y = d3.scaleLinear();
@@ -43,11 +43,11 @@ export class Chart3Component implements OnInit, OnChanges {
   }
 
   setElements() {
-    this.dataContainer = this.svg.append('g').attr('class', 'dataContainer')
-    .attr('transform', `translate(${this.left}, ${this.top})`);
     this.xAxisContainer = this.svg.append('g').attr('class', 'xAxisContainer')
     .attr('transform', `translate(${this.left}, ${this.top + this.innerHeight})`);
     this.yAxisContainer = this.svg.append('g').attr('class', 'yAxisContainer')
+    .attr('transform', `translate(${this.left}, ${this.top})`);
+    this.dataContainer = this.svg.append('g').attr('class', 'dataContainer')
     .attr('transform', `translate(${this.left}, ${this.top})`);
   }
 
@@ -55,21 +55,40 @@ export class Chart3Component implements OnInit, OnChanges {
     this.dimensions = this.svg.node().getBoundingClientRect();
     this.innerWidth = this.dimensions.width - this.left - this.right;
     this.innerHeight = this.dimensions.height - this.top - this.bottom;
+    this.svg.attr('viewBox', [0, 0, this.dimensions.width, this.dimensions.height]);
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if(!this.svg) return;
     this.setParams();
     this.setAxis();
+    this.setLabels();
     this.draw();
   }
+
+  setLabels() {
+    this.svg.append('g')
+    .attr('transform', `translate(15, ${0.5 * this.innerHeight + this.top})`)
+    .append('text').attr('class', 'label').text('Employee salary')
+    .attr('transform', `rotate(-90)`)
+    .style('text-anchor', 'middle');
+
+    this.xAxisContainer.selectAll('.tick text').text(this.getEmployeeName)
+    .attr('transform', 'translate(-10,2)rotate(-45)')
+    .style('text-anchor', 'end');
+  }
+
+  getEmployeeName = (id) => this.data.find((d) => d.id === id).employee_name;
 
   setAxis() {
     this.xAxis = d3.axisBottom(this.x);
     this.xAxisContainer.call(this.xAxis);
 
-    this.yAxis = d3.axisLeft(this.y);
+    this.yAxis = d3.axisLeft(this.y).tickSizeInner(-this.innerWidth).tickFormat(d3.format('$~s'));
     this.yAxisContainer.call(this.yAxis);
+
+    this.yAxisContainer.selectAll('.tick line').style('stroke', '#ddd');
+    // this.yAxisContainer.selectAll('.tick text').style('fill', '#ddd');
   }
 
   setParams() {
