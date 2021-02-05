@@ -49,6 +49,7 @@ export class Chart5Component implements OnInit, OnChanges {
 
   // selected data
   selected = ['hospitalized', 'death', 'hospitalizedCurrently'];
+  active = [true, true, true];
 
   // axis
   xAxis: any;
@@ -68,17 +69,19 @@ export class Chart5Component implements OnInit, OnChanges {
     }); */
     if (!this.data) { return []; }
 
-    return this.selected.map((item) => {
-      return {
-        name: item,
-        data: this.data.map((d) => ({
-          x: this.timeParse(d.date),
-          y: d[item]
-        }))
-        .filter((d) => d.y != null)
-        .sort((a, b) => a.x < b.x ? -1 : 1)
-      };
-    });
+    return this.selected
+      .filter((d, i) => this.active[i])
+      .map((item) => {
+        return {
+          name: item,
+          data: this.data.map((d) => ({
+            x: this.timeParse(d.date),
+            y: d[item]
+          }))
+          .filter((d) => d.y != null)
+          .sort((a, b) => a.x < b.x ? -1 : 1)
+        };
+      });
   }
 
   constructor(element: ElementRef) {
@@ -212,14 +215,46 @@ export class Chart5Component implements OnInit, OnChanges {
 
   setLegend() {
 
+    // specific methods
+    const generateLegendItems = (selection: any) => {
+      selection.append('circle')
+        .attr('class', 'legend-icon')
+        .attr('cx', 3)
+        .attr('cy', -4)
+        .attr('r', 3);
+
+      selection.append('text')
+        .attr('class', 'legend-label')
+        .attr('x', 9)
+        .style('font-size', '0.8rem');
+    }
+
+    const updateLegendItems = (selection) => {
+      selection
+        .selectAll('circle.legend-icon')
+        .style('fill', (d) => this.colors(d));
+
+      selection
+        .selectAll('text.legend-label')
+        .text((d) => d);
+    }
+
     // 1. select item containers and bind data
+    const itemContainers = this.legendContainer.selectAll('g.legend-item')
+      .data(this.selected);
 
-    // 2. enter:
-    //   a. add new containers
-    //   b. add circle + text
+    itemContainers.enter()
+      .append('g')
+        .attr('class', 'legend-item')
+        .call(generateLegendItems)
+      .merge(itemContainers)
+        .call(updateLegendItems)
+        .on('mouseover', () => { console.log('hover'); })
+        .on('click', (event, name) => {
+          this.toggleActive(name);
+          this.updateChart();
+        });
 
-    // 3. merge
-    //   a. update circle + text (color + label)
     //   b. bind events (click + hover)
 
     // 4. update state
@@ -227,6 +262,26 @@ export class Chart5Component implements OnInit, OnChanges {
     //   b. set opacity (if active => 1 else 0.3)
 
     // 5. remove groups not needed
+      itemContainers.exit().remove();
+
+
+    // 6. repositioning items
+
+      let totalPadding = 0;
+
+      this.legendContainer.selectAll('g.legend-item')
+      .each(function() {
+        const g = d3.select(this);
+        g.attr('transform', `translate(${totalPadding}, 0)`);
+        totalPadding += g.node().getBBox().width + 10;
+      });
+
+    // 7. repositioning legend
+      const legendWidth = this.legendContainer.node().getBBox().width;
+
+      this.legendContainer
+        .attr('transform', `translate(${this.margins.left + 0.5 * (this.innerWidth - legendWidth)}, ${this.dimensions.height - 0.5 * this.margins.bottom + 10})`);
+
 
   }
 
@@ -254,6 +309,11 @@ export class Chart5Component implements OnInit, OnChanges {
     this.setAxis();
     this.setLegend();
     this.draw();
+  }
+
+  toggleActive(selected: string) {
+    const index = this.selected.indexOf(selected);
+    this.active[index] = !this.active[index];
   }
 
 }
