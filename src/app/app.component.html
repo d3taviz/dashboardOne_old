@@ -27,7 +27,9 @@
       </div>
     </div>
     <div class="col-4">
-      <div class="chart"></div>
+      <div class="chart">
+        <app-chart5 [data]="covidData$ | async"></app-chart5>
+      </div>
     </div>
     <div class="col-4">
       <div class="chart"></div>

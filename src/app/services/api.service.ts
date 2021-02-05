@@ -12,10 +12,17 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
-  getEmployees(): Observable<any> {
-    return this.http.get<any>('http://dummy.restapiexample.com/api/v1/employees')
+  getJson(url: string): Observable<any> {
+    return this.http.get<any>(url)
     .pipe(
-      retry(3),
+      retry(3)
+    );
+  }
+
+  getEmployees(): Observable<any> {
+    const url = 'http://dummy.restapiexample.com/api/v1/employees';
+    return this.getJson(url)
+    .pipe(
       map((answer) => answer.data)
     );
   }
@@ -32,5 +39,10 @@ export class ApiService {
     const url = 'https://raw.githubusercontent.com/d3taviz/dashboardOne/scatterplot-init/src/assets/iris.csv';
     return this.getParsedData(url);
   ;
+  }
+
+  getCovidData(): Observable<any> {
+    const url = 'https://api.covidtracking.com/v1/us/daily.json';
+    return this.getJson(url);
   }
 }

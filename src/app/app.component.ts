@@ -15,6 +15,8 @@ export class AppComponent implements OnInit {
 
   iris$: Observable<any>;
 
+  covidData$: Observable<any>;
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -24,7 +26,7 @@ export class AppComponent implements OnInit {
     this.data2$ = this.api.getEmployees();
     this.iris$ = this.api.getIris();
 
-    this.iris$.subscribe((c) => console.log(c));
+    this.covidData$ = this.api.getCovidData();
 
     setTimeout(
       () => {
