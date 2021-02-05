@@ -5,4 +5,14 @@
     font-size: 12px;
     font-weight: bold;
   }
+
+  .legend-item {
+    cursor: pointer;
+
+    &:hover {
+      font-weight: bold;
+      transition: all 500ms;
+    }
+  }
+
 }

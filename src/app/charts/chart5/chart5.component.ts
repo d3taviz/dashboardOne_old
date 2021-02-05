@@ -249,11 +249,15 @@ export class Chart5Component implements OnInit, OnChanges {
         .call(generateLegendItems)
       .merge(itemContainers)
         .call(updateLegendItems)
-        .on('mouseover', () => { console.log('hover'); })
+        .on('mouseover', (event, name) => this.hoverLine(name))
+        .on('mouseleave', () => this.hoverLine())
         .on('click', (event, name) => {
           this.toggleActive(name);
           this.updateChart();
-        });
+        })
+        .transition()
+        .duration(500)
+        .style('opacity', (d, i) => this.active[i] ? 1 : 0.3);
 
     //   b. bind events (click + hover)
 
@@ -288,7 +292,7 @@ export class Chart5Component implements OnInit, OnChanges {
   draw() {
     // binding data
     const lines = this.dataContainer.selectAll('path.data')
-      .data(this.lineData);
+      .data(this.lineData, (d) => d.name);
 
     // enter and merge
     lines.enter().append('path')
@@ -296,6 +300,8 @@ export class Chart5Component implements OnInit, OnChanges {
       .style('fill', 'none')
       .style('stroke-width', '2px')
       .merge(lines)
+      .transition()
+      .duration(500)
       .attr('d', (d) => this.line(d.data))
       .style('stroke', (d) => this.colors(d.name));
 
@@ -314,6 +320,21 @@ export class Chart5Component implements OnInit, OnChanges {
   toggleActive(selected: string) {
     const index = this.selected.indexOf(selected);
     this.active[index] = !this.active[index];
+  }
+
+  hoverLine(selected?: string) {
+    const index = this.selected.indexOf(selected);
+
+    if (selected && this.active[index]) {
+      this.dataContainer.selectAll('path.data')
+      .attr('opacity', (d) => d.name === selected ? 1 : 0.3)
+      .style('stroke-width', (d) => d.name === selected ? '3px' : '2px');
+    } else {
+      this.dataContainer.selectAll('path.data')
+      .style('stroke-width', '2px')
+      .attr('opacity', null);
+    }
+
   }
 
 }
