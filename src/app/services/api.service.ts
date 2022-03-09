@@ -45,4 +45,9 @@ export class ApiService {
     const url = 'https://api.covidtracking.com/v1/us/daily.json';
     return this.getJson(url);
   }
+
+  getBrowsersData(): Observable<any> {
+    const url = 'assets/browsers.json';
+    return this.getJson(url);
+  }
 }

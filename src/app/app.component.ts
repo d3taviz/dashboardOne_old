@@ -17,6 +17,8 @@ export class AppComponent implements OnInit {
 
   covidData$: Observable<any>;
 
+  browser$: Observable<any>;
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -27,6 +29,10 @@ export class AppComponent implements OnInit {
     this.iris$ = this.api.getIris();
 
     this.covidData$ = this.api.getCovidData();
+
+    this.browser$ = this.api.getBrowsersData();
+
+    this.browser$.subscribe(c => console.log(c));
 
     setTimeout(
       () => {
