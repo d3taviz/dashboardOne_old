@@ -1,6 +1,10 @@
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from './services/api.service';
+import { IPieData } from './interfaces/chart.interfaces';
+import { PieHelper } from './helpers/pie.helper';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +17,22 @@ export class AppComponent implements OnInit {
   data1 = [125, 100, 50, 75, 200, 300, 100];
   data2$: Observable<any[]>;
 
+<<<<<<< Updated upstream
+=======
+  iris$: Observable<any>;
+
+  covidData$: Observable<any>;
+
+  browser$: Observable<any>;
+
+  browser: any;
+
+  pieData: IPieData = {
+    title: '',
+    data: []
+  };
+
+>>>>>>> Stashed changes
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -20,6 +40,22 @@ export class AppComponent implements OnInit {
     //Add 'implements OnInit' to the class.
 
     this.data2$ = this.api.getEmployees();
+<<<<<<< Updated upstream
+=======
+    this.iris$ = this.api.getIris();
+
+    this.covidData$ = this.api.getCovidData();
+
+    this.browser$ = this.api.getBrowsersData();
+
+    this.browser$.subscribe((data) => {
+      this.browser = data;
+      this.setPieData('now');
+      console.log(this.pieData);
+
+
+    });
+>>>>>>> Stashed changes
 
     setTimeout(
       () => {
@@ -29,4 +65,23 @@ export class AppComponent implements OnInit {
       , 5000
     )
   }
+
+/*   convertBrowserToPieData(valueAttr: string) {
+    const data = this.browser.map((elem) => ({
+      id: elem.name,
+      label: elem.name,
+      value: elem[valueAttr]
+    }));
+
+    return {
+      title: "Browser market share",
+      data
+    }
+  } */
+
+  setPieData(event) {
+    const valueAttr = typeof event === 'string' ? event : event.target.value;
+    this.pieData = PieHelper.convert(this.browser, "Browser market share", valueAttr, 'name', 'name');
+  }
+
 }
