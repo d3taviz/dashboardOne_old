@@ -28,7 +28,17 @@
       <div class="chart"></div>
     </div>
     <div class="col-4">
+<<<<<<< Updated upstream
       <div class="chart"></div>
+=======
+      <div class="chart">
+        <select class="chart-options" (change)="setPieData($event)">
+          <option value="now" selected>now</option>
+          <option value="before">before</option>
+        </select>
+        <app-chart6 [data]="pieData"></app-chart6>
+      </div>
+>>>>>>> Stashed changes
     </div>
   </div>
   <div class="row">
