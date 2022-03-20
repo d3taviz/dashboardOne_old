@@ -93,7 +93,6 @@ export class Chart5Component implements OnInit, OnChanges {
     this.setDimensions();
     this.setElements();
     this.updateChart();
-    console.log(this);
   }
 
   ngOnChanges(changes: SimpleChanges) {

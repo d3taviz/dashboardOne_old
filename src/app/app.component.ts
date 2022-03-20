@@ -36,6 +36,8 @@ export class AppComponent implements OnInit {
     },
   };
 
+  population$: Observable<any>;
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -52,10 +54,11 @@ export class AppComponent implements OnInit {
     this.browser$.subscribe((data) => {
       this.browser = data;
       this.setPieData('now');
-      console.log(this.pieData);
-
-
     });
+
+    this.population$ = this.api.getParsedData('assets/population.csv');
+
+    this.population$.subscribe(c => console.log(c));
 
     setTimeout(
       () => {
