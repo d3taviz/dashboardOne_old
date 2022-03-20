@@ -1,27 +1,6 @@
 
 import * as d3 from 'd3';
-import { IChartMargins } from '../interfaces/chart.interfaces';
-
-export interface IGroupStackDataElem {
-  key?: string;
-  domain: string;
-  group: string;
-  stack: string;
-  value: number;
-}
-
-export interface IGroupStackData {
-  title: string;
-  yLabel: string;
-  unit: string;
-  data: IGroupStackDataElem[];
-}
-
-export interface IGroupStackCOnfig {
-  hiddenOpacity: number;
-  transition: number;
-  margins: IChartMargins;
-}
+import { IChartMargins, IGroupStackDataElem } from '../interfaces/chart.interfaces';
 
 export class StackHelper {
   static SetStacks<T>(data: T[], domainAttr: string, groupAttr: string, stackAttr: string, valueAttr: string): IGroupStackDataElem[] {

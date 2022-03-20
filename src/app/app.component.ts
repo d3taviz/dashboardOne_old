@@ -1,11 +1,11 @@
 import { Observable } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from './services/api.service';
-import { IPieConfig, IPieData } from './interfaces/chart.interfaces';
+import { IPieConfig, IPieData, IGroupStackData, IGroupStackDataElem, IGroupStackConfig } from './interfaces/chart.interfaces';
 import { PieHelper } from './helpers/pie.helper';
 
 import * as d3 from 'd3';
-import { IGroupStackData, StackHelper } from './helpers/stack.helper';
+import { StackHelper } from './helpers/stack.helper';
 
 @Component({
   selector: 'app-root',
