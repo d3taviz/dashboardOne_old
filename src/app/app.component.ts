@@ -4,6 +4,9 @@ import { ApiService } from './services/api.service';
 import { IPieConfig, IPieData } from './interfaces/chart.interfaces';
 import { PieHelper } from './helpers/pie.helper';
 
+import * as d3 from 'd3';
+import { IGroupStackData, StackHelper } from './helpers/stack.helper';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -38,6 +41,10 @@ export class AppComponent implements OnInit {
 
   population$: Observable<any>;
 
+  population;
+
+  stackedData: IGroupStackData;
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -58,7 +65,18 @@ export class AppComponent implements OnInit {
 
     this.population$ = this.api.getParsedData('assets/population.csv');
 
-    this.population$.subscribe(c => console.log(c));
+    this.population$.subscribe(data => {
+      this.population = data;
+      const stacks = StackHelper.SetStacks(this.population, 'year', 'gender', 'age_group', 'value');
+
+      this.stackedData = {
+        title: ' Population by year, gender and age group (in millions)',
+        yLabel: 'Population (millions)',
+        unit: 'million',
+        data: stacks
+      };
+
+    });
 
     setTimeout(
       () => {
@@ -86,4 +104,7 @@ export class AppComponent implements OnInit {
     const valueAttr = typeof event === 'string' ? event : event.target.value;
     this.pieData = PieHelper.convert(this.browser, "Browser market share", valueAttr, 'name', 'name');
   }
+
+
+
 }
