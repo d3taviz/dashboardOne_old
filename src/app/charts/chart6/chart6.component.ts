@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 import { IPieConfig, IPieData } from 'src/app/interfaces/chart.interfaces';
 
 import ObjectHelper from 'src/app/helpers/object.helper';
+import { PieHelper } from 'src/app/helpers/pie.helper';
 
 @Component({
   selector: 'app-chart6',
@@ -211,51 +212,6 @@ export class Chart6Component implements OnInit, OnChanges {
       .attr('transform', `translate(${this.dimensions.width - this.margins.right}, ${this.margins.top + 0.5 * this.innerHeight - 0.5 * dimensions.height})`)
   }
 
-  extendPreviousDataWithEnter = (previous, current) => {
-
-    const previousIds = new Set(previous.map((d) => d.data.id));
-    const beforeEndAngle = (id) => previous.find((d) => d.data.id === id)?.endAngle || 0;
-
-    // get new elements (the enter selection)
-    // elements belonging to current that don't belong to previous
-    const newElements = current.filter((elem) => !previousIds.has(elem.data.id))
-    .map((elem) => {
-      const before = current.find((d) => d.index === elem.index - 1);
-
-      // get end angle of the previous element in the previous data
-      const angle = beforeEndAngle(before?.data?.id);
-
-      return {
-        ...elem,
-        startAngle: angle,
-        endAngle: angle
-      };
-    });
-
-    return [...previous, ...newElements];
-  }
-
-  extendCurrentDataWithExit = (previous, current) => {
-    return this.extendPreviousDataWithEnter(current, previous);
-  }
-
-  arcTweenFactory = (data, enter: boolean) => {
-    const chart = this;
-    const arcTween = function(elementData) {
-      const previousElemData = data.find((d) => d.data.id === elementData.data.id);
-
-      const [start, end] = enter ? [previousElemData, elementData] : [elementData, previousElemData];
-
-      const interpolate = d3.interpolate(start, end);
-
-      return function(t) {
-        return chart.arc(interpolate(t));
-      }
-    }
-
-    return arcTween;
-  }
-
   draw() {
     const chart = this;
 
@@ -265,12 +221,12 @@ export class Chart6Component implements OnInit, OnChanges {
       .selectAll('path.data')
       .data();
 
-    const extendedPreviousData = this.extendPreviousDataWithEnter(previousData, data);
-    const extendedCurrentData = this.extendCurrentDataWithExit(previousData, data);
+    const extendedPreviousData = PieHelper.ExtendPreviousDataWithEnter(previousData, data);
+    const extendedCurrentData = PieHelper.ExtendCurrentDataWithExit(previousData, data);
 
-    const enterArcTween = this.arcTweenFactory(extendedPreviousData, true);
+    const enterArcTween = PieHelper.ArcTweenFactory(extendedPreviousData, true, this.arc);
 
-    const exitArcTween = this.arcTweenFactory(extendedCurrentData, false);
+    const exitArcTween = PieHelper.ArcTweenFactory(extendedCurrentData, false, this.arc);
 
     this.dataContainer
       .selectAll('path.data')
@@ -317,9 +273,6 @@ export class Chart6Component implements OnInit, OnChanges {
   toggleHighlight(id) {
     this.hiddenIds.has(id) ? this.hiddenIds.delete(id) : this.hiddenIds.add(id);
     this.updateChart();
-
-    console.log(this.hiddenIds);
-
   }
 
   updateChart() {

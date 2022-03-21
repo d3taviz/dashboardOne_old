@@ -32,6 +32,9 @@ export class Chart7Component implements OnInit, OnChanges {
   title: any;
   yLabel: any;
 
+  // scales
+  scales: any = {};
+
   @Input() data;
 
   @Input() set config(values: Partial<IGroupStackConfig>) {
@@ -109,7 +112,55 @@ export class Chart7Component implements OnInit, OnChanges {
     // tooltip
   }
 
-  setParams(): void {}
+  setParams(): void {
+    // xScale
+    this.setXScale();
+    // yscale
+    this.setYScale();
+    //groupscale
+    this.setGroupScale();
+    //colorscale
+    this.setColorScale();
+  }
+
+  setXScale(): void {
+    const data = (this.data?.data || []);
+    // group ids
+    const domain = Array.from(new Set(data.map((d) => d.domain))).sort(d3.ascending);
+
+    const range = [0, this.dimensions.innerWidth];
+    this.scales.x = d3.scaleBand().domain(domain).range(range);
+  }
+
+  setYScale(): void {
+    const data = (this.data?.data || []);
+
+    const minVal = Math.min(0, d3.min(data, d => d.value));
+    const maxVal = d3.max(d3.flatRollup(data, v => d3.sum(v, d => d.value), d => d.domain, d => d.group), d => d[2]);
+
+    const domain = [minVal, maxVal];
+    const range = [this.dimensions.innerHeight, 0];
+
+    this.scales.y = d3.scaleLinear().domain(domain).range(range);
+  }
+
+  setGroupScale(): void {
+    const data = (this.data?.data || []);
+
+    const domain = Array.from(new Set(data.map((d) => d.group))).sort(d3.ascending);
+    const range = [0, this.scales.x.bandwidth()];
+
+    this.scales.group = d3.scaleBand().domain(domain).range(range);
+  }
+
+  setColorScale(): void {
+    const data = (this.data?.data || []);
+    const stacks = Array.from(new Set(data.map((d) => d.stack)));
+    const domain = [stacks.length - 1, 0];
+
+    this.scales.color = d3.scaleSequential(d3.interpolateSpectral).domain(domain);
+  }
+
   setLabels(): void {}
   setAxis(): void {}
   setLegend(): void {}

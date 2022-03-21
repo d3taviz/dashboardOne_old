@@ -20,7 +20,8 @@ export class ApiService {
   }
 
   getEmployees(): Observable<any> {
-    const url = 'http://dummy.restapiexample.com/api/v1/employees';
+    const url = 'assets/employees.json';
+    //const url = 'http://dummy.restapiexample.com/api/v1/employees';
     return this.getJson(url)
     .pipe(
       map((answer) => answer.data)
