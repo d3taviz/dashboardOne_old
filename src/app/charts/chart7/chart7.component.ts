@@ -102,7 +102,7 @@ export class Chart7Component implements OnInit, OnChanges {
 
     this.yLabel = this.svg.append('g').attr('class', 'yLabelContainer')
     .attr('transform', `translate(${this.dimensions.marginLeft - 30}, ${this.dimensions.marginTop})`)
-    .append('text').attr('class', 'titlyLabele')
+    .append('text').attr('class', 'yLabel')
     .style('text-anchor', 'middle')
     .attr('transform', 'rotate(-90)');
 
