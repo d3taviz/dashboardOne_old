@@ -7,7 +7,12 @@ import { IGroupStackConfig } from 'src/app/interfaces/chart.interfaces';
 
 @Component({
   selector: 'app-chart7',
-  template: `<svg class="chart7"></svg>`,
+  template: `<svg class="chart7">
+    <style>
+      .chart { font-size: 12px; }
+      .chart7 text.title { font-weight: bold;}
+    </style>
+  </svg>`,
   styles: []
 })
 export class Chart7Component implements OnInit, OnChanges {
@@ -69,7 +74,7 @@ export class Chart7Component implements OnInit, OnChanges {
    }
 
   ngOnInit(): void {
-    this.svg = this.host.select('svg');
+    this.svg = this.host.select('svg').attr('xmlns', 'http://www.w3.org/2000/svg');
     this.setDimensions();
     this.setElements();
     this.updateChart();
@@ -104,7 +109,7 @@ export class Chart7Component implements OnInit, OnChanges {
       .style('text-anchor', 'middle');
 
     this.yLabel = this.svg.append('g').attr('class', 'yLabelContainer')
-    .attr('transform', `translate(${this.dimensions.marginLeft - 30}, ${this.dimensions.marginTop})`)
+    .attr('transform', `translate(${this.dimensions.marginLeft - 30}, ${this.dimensions.midHeight})`)
     .append('text').attr('class', 'yLabel')
     .style('text-anchor', 'middle')
     .attr('transform', 'rotate(-90)');
@@ -161,8 +166,26 @@ export class Chart7Component implements OnInit, OnChanges {
     this.scales.color = d3.scaleSequential(d3.interpolateSpectral).domain(domain);
   }
 
-  setLabels(): void {}
-  setAxis(): void {}
+  setLabels(): void {
+    this.title.text(this.data.title);
+    this.yLabel.text(this.data.yLabel);
+  }
+
+  setAxis(): void {
+    this.setXAxis();
+    this.setYAxis();
+  }
+
+  setXAxis(): void {
+    this.xAxis = d3.axisBottom(this.scales.x);
+    this.xAxisContainer.call(this.xAxis);
+  }
+
+  setYAxis(): void {
+    this.yAxis = d3.axisLeft(this.scales.y);
+    this.yAxisContainer.call(this.yAxis);
+  }
+
   setLegend(): void {}
   draw(): void {}
 
