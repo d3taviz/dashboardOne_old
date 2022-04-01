@@ -73,7 +73,8 @@ export class AppComponent implements OnInit {
         title: ' Population by year, gender and age group (in millions)',
         yLabel: 'Population (millions)',
         unit: 'million',
-        data: stacks
+        data: stacks,
+        stackOrder: ['<3', '4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '>=40']
       };
 
     });
