@@ -67,7 +67,7 @@ export class AppComponent implements OnInit {
 
     this.population$.subscribe(data => {
       this.population = data;
-      const stacks = StackHelper.SetStacks(this.population, 'year', 'gender', 'age_group', 'value');
+      const stacks = StackHelper.SetStacks(this.population, 'year', 'gender', 'age_group', 'value', (val) => val/1e6);
 
       this.stackedData = {
         title: ' Population by year, gender and age group (in millions)',

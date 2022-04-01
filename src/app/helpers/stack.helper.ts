@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { IChartMargins, IGroupStackDataElem } from '../interfaces/chart.interfaces';
 
 export class StackHelper {
-  static SetStacks<T>(data: T[], domainAttr: string, groupAttr: string, stackAttr: string, valueAttr: string): IGroupStackDataElem[] {
+  static SetStacks<T>(data: T[], domainAttr: string, groupAttr: string, stackAttr: string, valueAttr: string, valueFormatter = (value) => value): IGroupStackDataElem[] {
 
     const calcKey = (elem): string => {
       const removeUndefined = (d) => d === undefined ? '' : '__' + d;
@@ -16,7 +16,7 @@ export class StackHelper {
       domain: elem[0],
       group: elem[1] || null,
       stack: elem[2] || null,
-      value: elem[3]
+      value: valueFormatter(elem[3])
     }));
 
   }
