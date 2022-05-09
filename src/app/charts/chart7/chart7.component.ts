@@ -8,6 +8,17 @@ import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem } from 'src/app
 @Component({
   selector: 'app-chart7',
   template: `<svg class="chart7">
+    <g class="tooltipContainer">
+      <rect class="svg-tooltip__background"></rect>
+      <g class="svg-tooltip">
+        <text class="svg-tooltip__title"></text>
+        <text class="svg-tooltip__symbol"></text>
+        <text class="svg-tooltip__value">
+          <tspan class="svg-tooltip__value--key"></tspan>
+          <tspan class="svg-tooltip__value--value"></tspan>
+        </text>
+      </g>
+    </g>
     <style>
       .chart { font-size: 12px; }
       .chart7 text.title { font-weight: bold;}
@@ -136,6 +147,8 @@ export class Chart7Component implements OnInit, OnChanges {
     .attr('transform', 'rotate(-90)');
 
     // tooltip
+    this.tooltipContainer = this.svg.select('g.tooltipContainer')
+      .raise();
   }
 
   setParams(): void {
@@ -295,35 +308,39 @@ export class Chart7Component implements OnInit, OnChanges {
       .keys(keys)
       .value((element, key) => element[1].find(d => d.stack === key).value);
 
-    this.stackedData = stack(groupedData);
-
-    console.log(this.stackedData);
+    this.stackedData = stack(groupedData)
+      .flatMap((v) => v.map((elem) => {
+        const [domain, group] = elem.data[0].split('__');
+        const data = elem.data[1].find((d) => d.stack === v.key) || {
+          domain,
+          group,
+          key: v.key
+        };
+        return {
+          index: v.index,
+          min: elem[0],
+          max: elem[1],
+          ...data
+        };
+      })
+    );
 
   }
 
   drawRectangles(): void {
     const data = this.stackedData;
 
-    const colors = d3.schemeCategory10;
-
-    this.dataContainer.selectAll('g.series')
+    this.dataContainer.selectAll('rect.data')
     .data(data, d => d.key)
-    .join('g')
-    .attr('class', 'series')
-    .style('fill', (d, i) => this.scales.color(i))
-    .selectAll('rect.data')
-    .data(d => d, d => d.data.year)
     .join('rect')
-    .attr('class', 'data')
-    //.attr('x', d => this.scales.x(d.data.year + ''))
-    .attr('x', d => {
-      const [domain, group] = d.data[0].split('__');
-      return this.scales.x(domain) + this.scales.group(group);
-    })
-    .attr('width', this.scales.group.bandwidth())
-    .attr('y', (d) => this.scales.y(d[1]))
-    .attr('height', (d) => Math.abs(this.scales.y(d[0]) - this.scales.y(d[1])))
-    .attr('stroke', 'white');
+      .attr('class', 'data')
+      .attr('x', d => this.scales.x(d.domain) + this.scales.group(d.group))
+      .attr('width', this.scales.group.bandwidth())
+      .attr('y', (d) => this.scales.y(d.max))
+      .attr('height', (d) => Math.abs(this.scales.y(d.min) - this.scales.y(d.max)))
+      .attr('stroke', 'white')
+      .style('fill', (d) => this.scales.color(d.index))
+      .on('mouseenter', this.tooltip);
   }
 
   updateChart(): void {
@@ -335,6 +352,20 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   // tooltip
+  tooltip(event: MouseEvent, d: any): void {
+    console.log(arguments);
+
+
+    // title
+
+    // set value
+
+    // set background
+
+    // resize
+
+    // set position
+  }
 
   // highlight
   data1 = [
