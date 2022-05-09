@@ -3,7 +3,7 @@ import { Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges } from '
 import * as d3 from 'd3';
 import { ChartDimensions } from 'src/app/helpers/chart.dimensions.helper';
 import ObjectHelper from 'src/app/helpers/object.helper';
-import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem } from 'src/app/interfaces/chart.interfaces';
+import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem, IGroupStackRectData, ITooltipData } from 'src/app/interfaces/chart.interfaces';
 
 @Component({
   selector: 'app-chart7',
@@ -306,7 +306,7 @@ export class Chart7Component implements OnInit, OnChanges {
     console.log(groupedData, keys);
     const stack = d3.stack()
       .keys(keys)
-      .value((element, key) => element[1].find(d => d.stack === key).value);
+      .value((element, key) => element[1].find(d => d.stack === key)?.value || 0);
 
     this.stackedData = stack(groupedData)
       .flatMap((v) => v.map((elem) => {
@@ -352,9 +352,18 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   // tooltip
-  tooltip(event: MouseEvent, d: any): void {
-    console.log(arguments);
+  tooltip = (event: MouseEvent, data: IGroupStackRectData): void => {
+    console.log(event, data, this);
 
+    const value = Math.round(10 * data.value) / 10 + ' ' + this.data;
+
+    // convert element to tooltip data
+    const tooltipData: ITooltipData = {
+      title: data.group + ' ' + data.domain,
+      color: this.scales.color(data.index),
+      key: data.stack,
+      value
+    };
 
     // title
 
