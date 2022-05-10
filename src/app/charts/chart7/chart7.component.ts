@@ -38,6 +38,12 @@ import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem, IGroupStackRec
         rx: {{config.tooltip.background.rx}}px;
         ry: {{config.tooltip.background.ry}}px;
       }
+      .chart7 rect.faded, .chart7 g.legend-item.faded {
+        opacity: 0.3;
+      }
+      .chart7 rect.data {
+        transition: opacity {{config.transitions.normal}};
+      }
     </style>
   </svg>`,
   styles: []
@@ -103,7 +109,6 @@ export class Chart7Component implements OnInit, OnChanges {
 
   private _defaultConfig: IGroupStackConfig = {
     hiddenOpacity: 0.3,
-    transition: 300,
     fontSize: 12,
     margins: {
       top: 40,
@@ -136,10 +141,26 @@ export class Chart7Component implements OnInit, OnChanges {
         x: 20,
         y: 20
       }
+    },
+    transitions: {
+      normal: 300,
+      slow: 600
     }
   }
 
   stackedData: any;
+
+  hiddenIds: Set<string> = new Set();
+
+  private _filteredData: IGroupStackDataElem[];
+
+  get filteredData() {
+    return this._filteredData || this.data.data;
+  }
+
+  set filteredData(values: IGroupStackDataElem[]) {
+    this._filteredData = values;
+  }
 
   constructor(element: ElementRef) {
     this.host = d3.select(element.nativeElement);
@@ -219,7 +240,7 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   setYScale(): void {
-    const data = this.data.data;
+    const data = this.filteredData;
 
     const minVal = Math.min(0, d3.min(data, d => d.value));
     const maxVal = d3.max(d3.flatRollup(data, v => d3.sum(v, d => d.value), d => d.domain, d => d.group), d => d[2]);
@@ -231,7 +252,7 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   setGroupScale(): void {
-    const data = this.data.data;
+    const data = this.filteredData;
 
     const domain = Array.from(new Set(data.map((d) => d.group))).sort(d3.ascending);
     const range = [0, this.scales.x.bandwidth()];
@@ -270,7 +291,10 @@ export class Chart7Component implements OnInit, OnChanges {
     .tickSizeOuter(0)
     .tickSizeInner(-this.dimensions.innerWidth);
 
-    this.yAxisContainer.call(this.yAxis);
+    this.yAxisContainer
+    .transition()
+    .duration(this.config.transitions.slow)
+    .call(this.yAxis);
 
     this.yAxisContainer.selectAll('.tick line')
     .style('opacity', 0.3)
@@ -306,7 +330,7 @@ export class Chart7Component implements OnInit, OnChanges {
       selection.selectAll('rect.lengend-icon')
       .style('fill', (d) => d.color);
 
-      selection.append('text')
+      selection.select('text.legend-label')
       .text((d) => d);
     }
 
@@ -319,7 +343,16 @@ export class Chart7Component implements OnInit, OnChanges {
         update => update
           .call(updateLegendItem)
       )
-      .attr('class', 'legend-item');
+      .attr('class', 'legend-item')
+      .on('mouseenter', (event, stack) => {
+        this.highlightSeries(stack);
+        this.highlightLegendItems(stack);
+      })
+      .on('mouseleave', () => {
+        this.resetHighlights();
+        this.resetLegendItems();
+      })
+      .on('click', (event, stack) => this.toggleHighlight(stack));
 
     // reposition elements
     // a. reposition legend items
@@ -346,7 +379,7 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   setStackedData(): void {
-    const data = this.data.data;
+    const data = this.filteredData;
     const groupedData = d3.groups(data, d => d.domain + '__' + d.group);
 
     const keys = this.data.stackOrder; //d3.groups(data, d => d.stack).map((d) => d[0]);
@@ -360,7 +393,9 @@ export class Chart7Component implements OnInit, OnChanges {
         const data = elem.data[1].find((d) => d.stack === v.key) || {
           domain,
           group,
-          key: v.key
+          stack: v.key,
+          key: domain + '__' + group + '__' + v.key,
+          value: 0
         };
         return {
           index: v.index,
@@ -378,15 +413,24 @@ export class Chart7Component implements OnInit, OnChanges {
 
     this.dataContainer.selectAll('rect.data')
     .data(data, d => d.key)
-    .join('rect')
+    .join(
+      enter => enter.append('rect')
+        .attr('y', this.scales.y(0))
+        .attr('height', 0)
+    )
       .attr('class', 'data')
       .attr('x', d => this.scales.x(d.domain) + this.scales.group(d.group))
       .attr('width', this.scales.group.bandwidth())
-      .attr('y', (d) => this.scales.y(d.max))
-      .attr('height', (d) => Math.abs(this.scales.y(d.min) - this.scales.y(d.max)))
       .attr('stroke', 'white')
       .style('fill', (d) => this.scales.color(d.index))
-      .on('mouseenter', this.tooltip);
+      .on('mouseenter', (event, data) => {
+        this.tooltip(event, data);
+        this.highlightRectangle(data);
+      })
+      .transition()
+      .duration(this.config.transitions.slow)
+      .attr('y', (d) => this.scales.y(d.max))
+      .attr('height', (d) => Math.abs(this.scales.y(d.min) - this.scales.y(d.max)));
   }
 
   updateChart(): void {
@@ -482,9 +526,55 @@ export class Chart7Component implements OnInit, OnChanges {
 
   hideTooltip = () => {
     this.tooltipContainer.style('visibility', 'hidden');
+    this.resetHighlights();
   }
 
   // highlight
+  highlightRectangle = (data: IGroupStackRectData): void => {
+    this.dataContainer.selectAll('rect.data')
+      .classed('faded', (d: IGroupStackRectData) => d.key !== data.key);
+  }
+
+  highlightSeries = (stack: string): void => {
+    if (this.hiddenIds.has(stack)) { return; }
+
+    this.dataContainer.selectAll('rect.data')
+      .classed('faded', (d: IGroupStackRectData) => d.stack !== stack);
+  }
+
+  highlightLegendItems = (stack: string): void => {
+    if (this.hiddenIds.has(stack)) { return; }
+
+    this.legendContainer.selectAll('g.legend-item')
+    .classed('faded', (d: string) => this.hiddenIds.has(d) || d !== stack);
+  }
+
+  resetHighlights = () => {
+    this.dataContainer.selectAll('rect.data')
+      .classed('faded', false);
+  }
+
+  resetLegendItems = () => {
+    this.legendContainer.selectAll('g.legend-item')
+    .classed('faded', (d) => this.hiddenIds.has(d));
+  }
+
+  toggleHighlight = (stack: string): void => {
+    // toggle hiddenId
+    if (this.hiddenIds.has(stack)) {
+      this.hiddenIds.delete(stack);
+    } else {
+      this.hiddenIds.add(stack);
+    }
+
+    // update filtered data
+    this.filteredData = this.data.data.filter((elem: IGroupStackDataElem) => !this.hiddenIds.has(elem.stack));
+
+    // redraw the chart
+    this.updateChart();
+  }
+
+
   data1 = [
     {
       year: 2002,
