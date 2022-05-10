@@ -12,17 +12,32 @@ import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem, IGroupStackRec
       <rect class="svg-tooltip__background"></rect>
       <g class="svg-tooltip">
         <text class="svg-tooltip__title"></text>
-        <text class="svg-tooltip__symbol"></text>
-        <text class="svg-tooltip__value">
+        <rect class="svg-tooltip__symbol"></rect>
+        <text class="svg-tooltip__value"
+          [attr.y]="config.tooltip.labels.height + config.fontSize"
+          [attr.x]="config.tooltip.symbol.width + config.tooltip.labels.textSeparator"
+        >
           <tspan class="svg-tooltip__value--key"></tspan>
           <tspan class="svg-tooltip__value--value"></tspan>
         </text>
       </g>
     </g>
     <style>
-      .chart { font-size: 12px; }
+      .chart7 { font-size: {{config.fontSize}}px; }
       .chart7 text.title { font-weight: bold;}
       .chart7 rect { fill: unset; }
+      .chart7 .svg-tooltip__value--value {
+        font-size: {{config.tooltip.labels.fontSize}}px;
+        font-weight: bold;
+      }
+      .chart7 .svg-tooltip__background {
+        fill: {{config.tooltip.background.color}};
+        fill-opacity: {{config.tooltip.background.opacity}};
+        stroke: {{config.tooltip.background.stroke}};
+        stroke-width: {{config.tooltip.background.strokeWidth}}px;
+        rx: {{config.tooltip.background.rx}}px;
+        ry: {{config.tooltip.background.ry}}px;
+      }
     </style>
   </svg>`,
   styles: []
@@ -89,11 +104,38 @@ export class Chart7Component implements OnInit, OnChanges {
   private _defaultConfig: IGroupStackConfig = {
     hiddenOpacity: 0.3,
     transition: 300,
+    fontSize: 12,
     margins: {
       top: 40,
       right: 20,
       bottom: 60,
       left: 50
+    },
+    tooltip: {
+      background: {
+        xPadding: 10,
+        yPadding: 10,
+        color: '#fff',
+        opacity: 0.9,
+        stroke: '#000',
+        strokeWidth: 2,
+        rx: 3,
+        ry: 3
+      },
+      labels: {
+        symbolSize: 6,
+        fontSize: 30,
+        height: 30,
+        textSeparator: 10
+      },
+      symbol: {
+        width: 6,
+        height: 6,
+      },
+      offset: {
+        x: 20,
+        y: 20
+      }
     }
   }
 
@@ -123,6 +165,11 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   setElements(): void {
+
+    this.svg
+      .on('mousemove', this.moveTooltip)
+      .on('mouseleave', this.hideTooltip);
+
     this.xAxisContainer = this.svg.append('g').attr('class', 'xAxisContainer')
       .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginBottom})`);
 
@@ -303,7 +350,6 @@ export class Chart7Component implements OnInit, OnChanges {
     const groupedData = d3.groups(data, d => d.domain + '__' + d.group);
 
     const keys = this.data.stackOrder; //d3.groups(data, d => d.stack).map((d) => d[0]);
-    console.log(groupedData, keys);
     const stack = d3.stack()
       .keys(keys)
       .value((element, key) => element[1].find(d => d.stack === key)?.value || 0);
@@ -353,9 +399,10 @@ export class Chart7Component implements OnInit, OnChanges {
 
   // tooltip
   tooltip = (event: MouseEvent, data: IGroupStackRectData): void => {
-    console.log(event, data, this);
 
-    const value = Math.round(10 * data.value) / 10 + ' ' + this.data;
+    this.showTooltip();
+
+    const value = Math.round(10 * data.value) / 10 + ' ' + this.data.unit;
 
     // convert element to tooltip data
     const tooltipData: ITooltipData = {
@@ -366,14 +413,75 @@ export class Chart7Component implements OnInit, OnChanges {
     };
 
     // title
+    this.tooltipContainer.select('text.svg-tooltip__title')
+      .attr('y', this.config.fontSize + 'px')
+      .text(tooltipData.title);
 
     // set value
 
+    this.tooltipContainer.select('tspan.svg-tooltip__value--key')
+      .text(tooltipData.key);
+
+    this.tooltipContainer.select('tspan.svg-tooltip__value--value')
+      .text(tooltipData.value);
+
+    // symbol
+    this.tooltipContainer.select('rect.svg-tooltip__symbol')
+      .attr('y', this.config.tooltip.labels.height + this.config.fontSize - this.config.tooltip.symbol.height)
+      .attr('width', this.config.tooltip.symbol.width)
+      .attr('height', this.config.tooltip.symbol.height)
+      .style('fill', tooltipData.color);
+
     // set background
+    const tooltipDimensions: DOMRect = this.tooltipContainer.select('g.svg-tooltip').node().getBoundingClientRect();
+
+    this.tooltipContainer.select('rect.svg-tooltip__background')
+      .attr('width', tooltipDimensions.width + 2 * this.config.tooltip.background.xPadding)
+      .attr('height', tooltipDimensions.height + 2 * this.config.tooltip.background.yPadding)
+      .attr('x', -this.config.tooltip.background.xPadding)
+      .attr('y', -this.config.tooltip.background.yPadding);
 
     // resize
 
     // set position
+    this.moveTooltip(event);
+
+  }
+
+  moveTooltip = (event: MouseEvent) => {
+    const position = d3.pointer(event, this.svg.node());
+
+    const dims = this.tooltipContainer.node().getBoundingClientRect();
+
+    let xPosition: number;
+    let yPosition: number;
+
+    if (position[0] > this.dimensions.midWidth) {
+      xPosition = position[0] - dims.width;
+    } else {
+      xPosition = position[0] + this.config.tooltip.offset.x;
+    }
+
+    yPosition = position[1] + this.config.tooltip.offset.y - 0.5 * dims.height;
+
+    if (yPosition + dims.height > this.dimensions.height) {
+      yPosition = this.dimensions.height - dims.height;
+    }
+
+    if (yPosition < this.config.tooltip.offset.y) {
+      yPosition = this.config.tooltip.offset.y;
+    }
+
+    this.tooltipContainer
+    .attr('transform', `translate(${xPosition}, ${yPosition})`);
+  }
+
+  showTooltip = () => {
+    this.tooltipContainer.style('visibility', null);
+  }
+
+  hideTooltip = () => {
+    this.tooltipContainer.style('visibility', 'hidden');
   }
 
   // highlight
