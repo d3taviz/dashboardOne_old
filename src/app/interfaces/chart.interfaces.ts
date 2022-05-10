@@ -55,7 +55,9 @@ export interface IGroupStackData {
 export interface IGroupStackConfig {
   hiddenOpacity: number;
   transition: number;
+  fontSize: number;
   margins: IChartMargins;
+  tooltip: ITooltipConfig;
 }
 
 export interface IGroupStackRectData extends IGroupStackDataElem{
@@ -70,4 +72,31 @@ export interface ITooltipData {
   color: string;
   key: string;
   value: number | string;
+}
+
+export interface ITooltipConfig {
+  background: {
+    xPadding: number;
+    yPadding: number;
+    color: string;
+    opacity: number;
+    stroke: string;
+    strokeWidth: number;
+    rx: number;
+    ry: number;
+  };
+  labels: {
+    symbolSize: number;
+    fontSize: number;
+    height: number;
+    textSeparator: number;
+  };
+  symbol: {
+    width: number;
+    height: number;
+  };
+  offset: {
+    x: number;
+    y: number;
+  }
 }
