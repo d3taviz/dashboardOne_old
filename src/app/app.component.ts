@@ -45,6 +45,31 @@ export class AppComponent implements OnInit {
 
   stackedData: IGroupStackData;
 
+  stackOptions = [
+    {
+      label: 'Year (grouped)',
+      value: 'year/gender/age_group/'
+    }, {
+      label: 'Year (no group - stacked)',
+      value: 'year//age_group/'
+    }, {
+      label: 'Year (grouped - no stack)',
+      value: 'year/age_group//'
+    }, {
+      label: 'Year (no group - no stack)',
+      value: 'year///'
+    }, {
+      label: 'Countries 2012',
+      value: 'country/gender/age_group/2012'
+    }, {
+      label: 'Country 2006',
+      value: 'country/gender/age_group/2006'
+    }, {
+      label: 'Country (no group - stacked)',
+      value: 'country//age_group/2012'
+    }
+  ];
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -67,16 +92,7 @@ export class AppComponent implements OnInit {
 
     this.population$.subscribe(data => {
       this.population = data;
-      const stacks = StackHelper.SetStacks(this.population, 'year', 'gender', 'age_group', 'value', (val) => val/1e6);
-
-      this.stackedData = {
-        title: ' Population by year, gender and age group (in millions)',
-        yLabel: 'Population (millions)',
-        unit: 'million',
-        data: stacks,
-        stackOrder: ['<3', '4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '>=40']
-      };
-
+      this.setStackedData('year/gender/age_group/');
     });
 
     setTimeout(
@@ -106,6 +122,23 @@ export class AppComponent implements OnInit {
     this.pieData = PieHelper.convert(this.browser, "Browser market share", valueAttr, 'name', 'name');
   }
 
+  setStackedData(event) {
+    const valueAttr = typeof event === 'string' ? event : event.target.value;
 
+    const [domain, group, stack, year] = valueAttr.split('/');
+
+    const population = year == '' ? this.population : this.population.filter((d) => d.year === year);
+
+    const data = StackHelper.SetStacks(population, domain, group, stack, 'value', (val) => val/1e6);
+
+      this.stackedData = {
+        title: ' Population by year, gender and age group (in millions)',
+        yLabel: 'Population (millions)',
+        unit: 'million',
+        data,
+        stackOrder: ['<3', '4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '>=40']
+      };
+
+  }
 
 }

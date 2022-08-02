@@ -33,6 +33,9 @@
     </div>
     <div class="col-4">
       <div class="chart">
+        <select class="chart-options" (change)="setStackedData($event)">
+          <option *ngFor="let option of stackOptions" value="{{option.value}}">{{option.label}}</option>
+        </select>
         <app-chart7 [data]="stackedData" [config]=""></app-chart7>
       </div>
     </div>
