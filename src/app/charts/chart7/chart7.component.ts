@@ -188,17 +188,17 @@ export class Chart7Component implements OnInit, OnChanges {
   setElements(): void {
 
     this.svg
-      .on('mousemove', this.moveTooltip)
-      .on('mouseleave', this.hideTooltip);
+      .on('mousemove', this.moveTooltip);
 
     this.xAxisContainer = this.svg.append('g').attr('class', 'xAxisContainer')
-      .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginBottom})`);
+      .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginBottom + 1})`);
 
     this.yAxisContainer = this.svg.append('g').attr('class', 'yAxisContainer')
-      .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
+      .attr('transform', `translate(${this.dimensions.marginLeft - 2}, ${this.dimensions.marginTop})`);
 
     this.dataContainer = this.svg.append('g').attr('class', 'dataContainer')
-      .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
+      .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`)
+      .on('mouseleave', this.hideTooltip);
 
     this.legendContainer = this.svg.append('g').attr('class', 'legendContainer')
       .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginBottom + 30})`);
@@ -236,7 +236,7 @@ export class Chart7Component implements OnInit, OnChanges {
     const domain = Array.from(new Set(data.map((d) => d.domain))).sort(d3.ascending);
 
     const range = [0, this.dimensions.innerWidth];
-    this.scales.x = d3.scaleBand().domain(domain).range(range);
+    this.scales.x = d3.scaleBand().domain(domain).range(range).paddingInner(0.2);
   }
 
   setYScale(): void {
@@ -257,7 +257,7 @@ export class Chart7Component implements OnInit, OnChanges {
     const domain = Array.from(new Set(data.map((d) => d.group))).sort(d3.ascending);
     const range = [0, this.scales.x.bandwidth()];
 
-    this.scales.group = d3.scaleBand().domain(domain).range(range);
+    this.scales.group = d3.scaleBand().domain(domain).range(range).paddingInner(0.15);
   }
 
   setColorScale(): void {
