@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from './services/api.service';
 import { IPieConfig, IPieData, IGroupStackData, IGroupStackDataElem, IGroupStackConfig } from './interfaces/chart.interfaces';
@@ -70,6 +70,9 @@ export class AppComponent implements OnInit {
     }
   ];
 
+  // map observables
+  geoCountries$: Observable<any>;
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -101,7 +104,10 @@ export class AppComponent implements OnInit {
 
         this.data1 = [...this.data1, 600]; }
       , 5000
-    )
+    );
+
+    // map subscriptions
+    this.geoCountries$ = this.api.getCountriesGeoData();
   }
 
   /*   convertBrowserToPieData(valueAttr: string) {
