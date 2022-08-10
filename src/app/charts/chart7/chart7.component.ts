@@ -85,6 +85,8 @@ export class Chart7Component implements OnInit, OnChanges {
 
   @Input() set data(values) {
     this._data = ObjectHelper.UpdateObjectWithPartialValues(this._defaultData, values);
+
+    this.setStackedAndGrouped();
   };
 
   get data() {
@@ -149,6 +151,13 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   stackedData: any;
+
+  stacked: boolean;
+
+  grouped: boolean;
+
+  stackIds: Set<string>;
+  groupIds: Set<string>;
 
   hiddenIds: Set<string> = new Set();
 
@@ -262,8 +271,9 @@ export class Chart7Component implements OnInit, OnChanges {
 
   setColorScale(): void {
     const data = this.data.data;
-    const stacks = Array.from(new Set(data.map((d) => d.stack)));
-    const domain = [stacks.length - 1, 0];
+    const stacks = new Set(data.map((d) => d.stack));
+    const n = this.stacked ? this.stackIds.size : this.groupIds.size;
+    const domain = [n + 1, 0];
 
     this.scales.color = d3.scaleSequential(d3.interpolateSpectral).domain(domain);
   }
@@ -302,6 +312,10 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   setLegend(): void {
+    if (!this.stacked && !this.grouped) {
+      this.legendContainer.html('');
+      return;
+    }
     const data = this.data.stackOrder;
 
     const width = 35;
@@ -382,7 +396,7 @@ export class Chart7Component implements OnInit, OnChanges {
     const data = this.filteredData;
     const groupedData = d3.groups(data, d => d.domain + '__' + d.group);
 
-    const keys = this.data.stackOrder; //d3.groups(data, d => d.stack).map((d) => d[0]);
+    const keys = this.stacked ? this.data.stackOrder : [null]; //d3.groups(data, d => d.stack).map((d) => d[0]);
     const stack = d3.stack()
       .keys(keys)
       .value((element, key) => element[1].find(d => d.stack === key)?.value || 0);
@@ -398,7 +412,7 @@ export class Chart7Component implements OnInit, OnChanges {
           value: 0
         };
         return {
-          index: v.index,
+          index: this.stacked ? v.index : this.data.stackOrder.indexOf(group),
           min: elem[0],
           max: elem[1],
           ...data
@@ -448,11 +462,15 @@ export class Chart7Component implements OnInit, OnChanges {
 
     const value = Math.round(10 * data.value) / 10 + ' ' + this.data.unit;
 
+    const title = (this.grouped && this.stacked) ? data.group + ' ' + data.domain : data.domain;
+
+    const key = this.stacked ? data.stack : (this.grouped ? data.group : null);
+
     // convert element to tooltip data
     const tooltipData: ITooltipData = {
-      title: data.group + ' ' + data.domain,
+      title,
       color: this.scales.color(data.index),
-      key: data.stack,
+      key,
       value
     };
 
@@ -470,12 +488,11 @@ export class Chart7Component implements OnInit, OnChanges {
       .text(tooltipData.value);
 
     // symbol
-    this.tooltipContainer.select('rect.svg-tooltip__symbol')
-      .attr('y', this.config.tooltip.labels.height + this.config.fontSize - this.config.tooltip.symbol.height)
-      .attr('width', this.config.tooltip.symbol.width)
-      .attr('height', this.config.tooltip.symbol.height)
-      .style('fill', tooltipData.color);
-
+      this.tooltipContainer.select('rect.svg-tooltip__symbol')
+        .attr('y', this.config.tooltip.labels.height + this.config.fontSize - this.config.tooltip.symbol.height)
+        .attr('width', this.config.tooltip.symbol.width)
+        .attr('height', this.config.tooltip.symbol.height)
+        .style('fill', tooltipData.color);
     // set background
     const tooltipDimensions: DOMRect = this.tooltipContainer.select('g.svg-tooltip').node().getBoundingClientRect();
 
@@ -536,10 +553,11 @@ export class Chart7Component implements OnInit, OnChanges {
   }
 
   highlightSeries = (stack: string): void => {
+    const attr = this.stacked ? 'stack' : 'group';
     if (this.hiddenIds.has(stack)) { return; }
 
     this.dataContainer.selectAll('rect.data')
-      .classed('faded', (d: IGroupStackRectData) => d.stack !== stack);
+      .classed('faded', (d: IGroupStackRectData) => d[attr] !== stack);
   }
 
   highlightLegendItems = (stack: string): void => {
@@ -574,6 +592,13 @@ export class Chart7Component implements OnInit, OnChanges {
     this.updateChart();
   }
 
+  setStackedAndGrouped = (): void => {
+    this.stackIds = new Set(this.data.data.map((d) => d.stack));
+    this.groupIds = new Set(this.data.data.map((d) => d.group));
+
+    this.stacked = this.stackIds.size > 1;
+    this.grouped = this.groupIds.size > 1;
+  }
 
   data1 = [
     {
