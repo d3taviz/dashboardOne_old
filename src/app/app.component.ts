@@ -1,19 +1,22 @@
-import { map, Observable } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
+import { combineLatest, map, Observable, Subscription } from 'rxjs';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ApiService } from './services/api.service';
 import { IPieConfig, IPieData, IGroupStackData, IGroupStackDataElem, IGroupStackConfig } from './interfaces/chart.interfaces';
 import { PieHelper } from './helpers/pie.helper';
 
 import * as d3 from 'd3';
 import { StackHelper } from './helpers/stack.helper';
+import { MapHelper } from './helpers/map.helper';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'DashboardOne';
+
+  subscrtiptions: Subscription[] = [];
 
   data1 = [125, 100, 50, 75, 200, 300, 100];
   data2$: Observable<any[]>;
@@ -72,12 +75,18 @@ export class AppComponent implements OnInit {
 
   // map observables
   geoCountries$: Observable<any>;
+  covidByCountry$: Observable<any>;
+  countrycodes$: Observable<any>;
+
+  covidMap = new MapHelper();
 
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
     //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
     //Add 'implements OnInit' to the class.
+
+    let subs: Subscription;
 
     this.data2$ = this.api.getEmployees();
     this.iris$ = this.api.getIris();
@@ -86,17 +95,21 @@ export class AppComponent implements OnInit {
 
     this.browser$ = this.api.getBrowsersData();
 
-    this.browser$.subscribe((data) => {
+    subs = this.browser$.subscribe((data) => {
       this.browser = data;
       this.setPieData('now');
     });
 
+    this.subscrtiptions.push(subs);
+
     this.population$ = this.api.getParsedData('assets/population.csv');
 
-    this.population$.subscribe(data => {
+    subs = this.population$.subscribe(data => {
       this.population = data;
       this.setStackedData('year/gender/age_group/');
     });
+
+    this.subscrtiptions.push(subs);
 
     setTimeout(
       () => {
@@ -108,6 +121,22 @@ export class AppComponent implements OnInit {
 
     // map subscriptions
     this.geoCountries$ = this.api.getCountriesGeoData();
+
+    this.covidByCountry$ = this.api.getCovidByCountry();
+
+    this.countrycodes$ = this.api.getCountryCodes();
+
+    subs = combineLatest([this.covidByCountry$, this.countrycodes$])
+    .subscribe(([data, codes]) => {
+      // set the map data
+      this.covidMap.setData(data, codes);
+    });
+    
+    this.subscrtiptions.push(subs);
+  }
+
+  ngOnDestroy(): void {
+    this.subscrtiptions.map((sub) => sub.unsubscribe());
   }
 
   /*   convertBrowserToPieData(valueAttr: string) {
