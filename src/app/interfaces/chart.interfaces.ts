@@ -103,3 +103,18 @@ export interface ITooltipConfig {
     y: number;
   };
 }
+
+export interface IMapDataElement {
+  id: string;
+  value: number;
+  date: number;
+}
+
+export interface IMapData {
+  title: string;
+  data: IMapDataElement[];
+}
+
+export interface IMapConfig {
+  margins: IChartMargins;
+}
