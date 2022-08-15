@@ -1,6 +1,8 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 import * as d3 from 'd3';
+import * as topojson from 'topojson';
+
 import ObjectHelper from 'src/app/helpers/object.helper';
 import { IMapConfig, IMapData } from 'src/app/interfaces/chart.interfaces';
 import { DimensionsService } from 'src/app/services/dimensions.service';
@@ -21,6 +23,7 @@ export class Chart8Component implements OnInit {
 
   projection: any;
   path: any;
+  features: any;
 
   private _geodata: any;
 
@@ -30,15 +33,17 @@ export class Chart8Component implements OnInit {
 
   private _defaultConfig: IMapConfig = {
     margins: {
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0
+      top: 20,
+      left: 20,
+      right: 20,
+      bottom: 20
     }
   }
 
   @Input() set geodata(values) {
     this._geodata = values;
+    if (!this.svg) { return; }
+    this.updateChart();
   }
 
   @Input() set data(values) {
@@ -74,8 +79,8 @@ export class Chart8Component implements OnInit {
     this.setSvg();
     this.setDimensions();
     this.setElements();
-    this.positioningElements();
-    this.setParams();
+    if (!this.geodata) { return; }
+    this.updateChart();
   }
 
   setSvg() {
@@ -94,6 +99,14 @@ export class Chart8Component implements OnInit {
     this.containers.titleContainer = this.svg.append('g').attr('class', 'title');
     this.title = this.containers.titleContainer.append('text').attr('class', 'title');
     this.containers.legend = this.svg.append('g').attr('class', 'legend');
+  }
+
+  updateChart() {
+    this.positioningElements();
+    this.setParams();
+    this.setLabels();
+    this.setLegend();
+    this.draw();
   }
 
   positioningElements() {
@@ -117,6 +130,16 @@ export class Chart8Component implements OnInit {
     this.path = d3.geoPath(this.projection);
   }
 
-  setFeatures(){}
+  setFeatures(){
+    this.features = topojson.feature(this.geodata, this.geodata.objects['CNTR_RG_60M_2020_4326']);
+  }
+
+  setLabels() {}
+  setLegend() {}
+  draw() {
+    this.containers.countries.append('path')
+    .datum(this.features)
+    .attr('d', this.path);
+  }
 
 }
