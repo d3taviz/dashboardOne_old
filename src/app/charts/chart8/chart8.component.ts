@@ -9,7 +9,18 @@ import { DimensionsService } from 'src/app/services/dimensions.service';
 
 @Component({
   selector: 'app-chart8',
-  template: `<svg class="chart8"></svg>`,
+  template: `<svg class="chart8">
+    <style>
+      .chart8 path.countries {
+        fill: #fff;
+        stroke: #aaa;
+      }
+
+      .chart8 path.data {
+        stroke: none;
+      }
+    </style>
+  </svg>`,
   styleUrls: ['./chart8.component.scss'],
   providers: [DimensionsService]
 })
@@ -24,6 +35,9 @@ export class Chart8Component implements OnInit {
   projection: any;
   path: any;
   features: any;
+  dataFeatures: any;
+
+  colors: any;
 
   private _geodata: any;
 
@@ -48,6 +62,8 @@ export class Chart8Component implements OnInit {
 
   @Input() set data(values) {
     this._data = values;
+    if (!this.svg) { return; }
+    this.updateChart();
   }
 
   @Input() set config(values) {
@@ -95,6 +111,7 @@ export class Chart8Component implements OnInit {
 
   setElements() {
     this.containers.countries = this.svg.append('g').attr('class', 'countries');
+    this.containers.countries.append('path').attr('class', 'countries');
     this.containers.data = this.svg.append('g').attr('class', 'data');
     this.containers.titleContainer = this.svg.append('g').attr('class', 'title');
     this.title = this.containers.titleContainer.append('text').attr('class', 'title');
@@ -104,6 +121,7 @@ export class Chart8Component implements OnInit {
   updateChart() {
     this.positioningElements();
     this.setParams();
+    this.setDataFeatures();
     this.setLabels();
     this.setLegend();
     this.draw();
@@ -117,29 +135,112 @@ export class Chart8Component implements OnInit {
   }
 
   setParams() {
+    this.setFeatures();
     this.setProjection();
     this.setPath();
-    this.setFeatures();
+    this.setColors();
   }
 
   setProjection() {
-    this.projection = d3.geoEquirectangular();
+    this.projection = d3.geoEquirectangular()
+      .fitSize([this.dimensions.innerWidth, this.dimensions.innerHeight], this.features);
   }
 
   setPath() {
     this.path = d3.geoPath(this.projection);
   }
 
+  setColors() {
+    this.colors = d3.scaleThreshold()
+      .domain(this.data.thresholds)
+      .range(d3.schemeOranges[9]);
+  }
+
+  color(value: number | null): string {
+    if (value === null) {
+      return '#b4b4b4'
+    }
+    return this.colors(value);
+  }
+
   setFeatures(){
     this.features = topojson.feature(this.geodata, this.geodata.objects['CNTR_RG_60M_2020_4326']);
+  }
+
+  setDataFeatures() {
+    const ids = new Set(this.data.data.map((d) => d.id));
+    this.dataFeatures = this.features.features?.filter((feature) => ids.has(feature.properties.ISO3_CODE)) || [];
   }
 
   setLabels() {}
   setLegend() {}
   draw() {
-    this.containers.countries.append('path')
-    .datum(this.features)
-    .attr('d', this.path);
+    this.drawBaseLayer();
+    this.drawDataLayer();
+  }
+
+  drawBaseLayer() {
+    this.containers.countries.select('path.countries')
+      .datum(this.features)
+      .attr('d', this.path);
+  }
+
+  drawDataLayer() {
+    this.containers.data.selectAll('path.data')
+    .data(this.dataFeatures)
+    .join('path')
+    .attr('class', 'data')
+    .attr('d', this.path)
+    .style('fill', (d) => this.color(this.getValueByFeature(d)));
+  }
+
+  getValueByFeature(feature: any): number {
+    const id = feature.properties.ISO3_CODE;
+    return this.data.data.find((d) => d.id === id)?.value || null;
+  }
+
+  setScale(scale: number) {
+    this.projection.scale(scale);
+    this.setPath();
+    this.draw();
+  }
+
+  setTranslate(x: number, y:number) {
+    this.projection.translate([x, y]);
+    this.setPath();
+    this.draw();
+  }
+
+  setCenter(x: number, y: number) {
+    this.projection.center([x, y]);
+    this.setPath();
+    this.draw();
+  }
+
+  setRotate(x: number, y: number, z: number) {
+    this.projection.rotate([x, y, z]);
+    this.setPath();
+    this.draw();
+  }
+
+  setExtent(width, height) {
+    this.projection.fitSize([width, height], this.features);
+    this.setPath();
+    this.draw();
+
+  }
+ 
+  setWidth(width) {
+    this.projection.fitWidth(width, this.features);
+    this.setPath();
+    this.draw();
+
+  }
+  setHeight(height) {
+    this.projection.fitHeight(height, this.features);
+    this.setPath();
+    this.draw();
+
   }
 
 }

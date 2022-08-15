@@ -113,6 +113,7 @@ export interface IMapDataElement {
 export interface IMapData {
   title: string;
   data: IMapDataElement[];
+  thresholds: number[];
 }
 
 export interface IMapConfig {
