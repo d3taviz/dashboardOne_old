@@ -26,6 +26,14 @@ import { DimensionsService } from 'src/app/services/dimensions.service';
         font-weight: bold;
         dominant-baseline: middle;
       }
+
+      .chart8 .highlighted rect, .chart8 path.data.highlighted {
+        stroke: black;
+      }
+
+      .chart8 .faded {
+        opacity: 0.3;
+      }
     </style>
   </svg>`,
   styleUrls: ['./chart8.component.scss'],
@@ -226,7 +234,19 @@ export class Chart8Component implements OnInit {
         .call(updateLegendItem)
       )
       .attr('class', 'legend-item')
-      .attr('transform', (d, i) => `translate(${i * width + (i && nodataSeparator || 0)}, 0)`);
+      .attr('transform', (d, i) => `translate(${i * width + (i && nodataSeparator || 0)}, 0)`)
+      .on('mouseenter', (event, d) => {
+        //highlight the legend items
+        this.highlightLegendItems(d);
+        //highlight the features
+        this.highlightFeatures(d);
+      })
+      .on('mouseleave', () => {
+        //reset the legend items
+        this.resetLegendItems();
+        //reset the features
+        this.resetFeatures();
+      });
 
        // reposition elements
 
@@ -238,6 +258,42 @@ export class Chart8Component implements OnInit {
         ${this.dimensions.midWidth - 0.5 * legendBox.width},
         ${this.dimensions.midMarginBottom - 0.5 * legendBox.height}
       )`);
+  }
+
+  highlightLegendItems = (value: number | null) => {
+    this.containers.legend.selectAll('g.legend-item')
+      .classed('highlighted', (d) => d === value);
+  }
+
+  highlightFeatures = (value: number | null) => {
+    const color = d3.color(this.color(value)).toString();
+
+    this.containers.countries.selectAll('path')
+      .classed('faded', 'true');
+
+    this.containers.data.selectAll('path.data')
+      .classed('highlighted', function (d) {
+       // const currentColor = this.color(this.getValueByFeature(d));
+        const featureColor = d3.select(this).style('fill');
+        return featureColor === color;
+      })
+      .classed('faded', function() {
+        const featureColor = d3.select(this).style('fill');
+        return featureColor !== color;
+      })
+  }
+
+  resetLegendItems = () => {
+    this.containers.legend.selectAll('g.legend-item')
+      .classed('highlighted', false);
+  }
+
+  resetFeatures = () => {
+    this.containers.countries.selectAll('path')
+      .classed('faded', 'false');
+    
+    this.containers.data.selectAll('path.data')
+      .classed('highlighted faded', false);
   }
 
   draw() {
