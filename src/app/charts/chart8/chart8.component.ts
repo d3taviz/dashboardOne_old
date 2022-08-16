@@ -19,6 +19,13 @@ import { DimensionsService } from 'src/app/services/dimensions.service';
       .chart8 path.data {
         stroke: none;
       }
+
+      .chart8 text.title {
+        text-anchor: middle;
+        font-size: 12px;
+        font-weight: bold;
+        dominant-baseline: middle;
+      }
     </style>
   </svg>`,
   styleUrls: ['./chart8.component.scss'],
@@ -47,7 +54,7 @@ export class Chart8Component implements OnInit {
 
   private _defaultConfig: IMapConfig = {
     margins: {
-      top: 20,
+      top: 40,
       left: 20,
       right: 20,
       bottom: 20
@@ -172,8 +179,12 @@ export class Chart8Component implements OnInit {
     this.dataFeatures = this.features.features?.filter((feature) => ids.has(feature.properties.ISO3_CODE)) || [];
   }
 
-  setLabels() {}
+  setLabels() {
+    this.title.text(this.data.title);
+  }
+
   setLegend() {}
+
   draw() {
     this.drawBaseLayer();
     this.drawDataLayer();
