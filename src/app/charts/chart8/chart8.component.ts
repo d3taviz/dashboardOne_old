@@ -57,7 +57,7 @@ export class Chart8Component implements OnInit {
       top: 40,
       left: 20,
       right: 20,
-      bottom: 20
+      bottom: 40
     }
   }
 
@@ -159,7 +159,7 @@ export class Chart8Component implements OnInit {
 
   setColors() {
     this.colors = d3.scaleThreshold()
-      .domain(this.data.thresholds)
+      .domain(this.data.thresholds.slice(2, this.data.thresholds.length))
       .range(d3.schemeOranges[9]);
   }
 
@@ -183,7 +183,62 @@ export class Chart8Component implements OnInit {
     this.title.text(this.data.title);
   }
 
-  setLegend() {}
+  setLegend() {
+    const data = this.data.thresholds;
+
+    const width = 30;
+    const height = 10;
+    const fontSize = 10;
+    const nodataSeparator = 10;
+    const nodataLabel = 'no data';
+
+    const generateLegendItem = (selection) => {
+      selection.append('rect')
+      .attr('class', 'legend-icon')
+      .attr('width', width)
+      .attr('height', height)
+      .style('fill', (d) => this.color(d));
+
+      selection.append('text')
+        .attr('class', 'legend-label')
+        .attr('x', (d) => d === null ? 0.5 * width : 0)
+        .attr('y', height + fontSize + 1)
+        .style('font-size', fontSize + 'px')
+        .style('text-anchor', 'middle')
+        .text((d) => d === null ? nodataLabel : d);
+    }
+
+    const updateLegendItem = (selection) => {
+      selection.selectAll('rect.lengend-icon')
+      .style('fill', (d) => d.color);
+
+      selection.select('text.legend-label')
+      .text((d) => d);
+    }
+
+    // set legend items
+    this.containers.legend.selectAll('g.legend-item')
+      .data(data)
+      .join(
+        enter => enter.append('g')
+        .call(generateLegendItem),
+      update => update
+        .call(updateLegendItem)
+      )
+      .attr('class', 'legend-item')
+      .attr('transform', (d, i) => `translate(${i * width + (i && nodataSeparator || 0)}, 0)`);
+
+       // reposition elements
+
+    //b. reposition the legend
+    const legendBox = this.containers.legend.node().getBBox();
+
+    this.containers.legend
+      .attr('transform', `translate(
+        ${this.dimensions.midWidth - 0.5 * legendBox.width},
+        ${this.dimensions.midMarginBottom - 0.5 * legendBox.height}
+      )`);
+  }
 
   draw() {
     this.drawBaseLayer();
