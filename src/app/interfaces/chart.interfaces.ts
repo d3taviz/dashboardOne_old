@@ -119,3 +119,34 @@ export interface IMapData {
 export interface IMapConfig {
   margins: IChartMargins;
 }
+
+export interface ITooltipState {
+  visible: boolean;
+  x: number;
+  y: number;
+}
+
+export interface ITimelineData {
+  title: string;
+  activeTime: number;
+  data: IMapDataElement[];
+  timeFormat: string;
+}
+
+export interface ITimelineConfig {
+  margins: IChartMargins;
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  background: {
+    color: string;
+  };
+  title: {
+    fontSize: number;
+    fontWeight: string;
+  };
+  labels: {
+    fontSize: number;
+  };
+}
