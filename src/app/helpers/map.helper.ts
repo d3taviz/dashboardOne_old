@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { MapTooltipActions, MapTooltipActionsTypes, ShowMapTooltip } from '../actions/map-tooltip.actions';
 import { IMapData, IMapDataElement } from '../interfaces/chart.interfaces';
 
 export class MapHelper {
@@ -15,6 +16,12 @@ export class MapHelper {
         title: 'Covid-19 new death cases',
         data: [],
         thresholds: []
+    };
+
+    tooltipState = {
+        visible: false,
+        x: 0,
+        y: 0
     };
 
     parseDate = (date: string): number => Date.parse(date);
@@ -47,5 +54,38 @@ export class MapHelper {
             data: this.dataByDate.get(this.currentDate),
             thresholds: [null, 0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20]
         };
+    }
+
+    tooltip = (action : MapTooltipActions) => {
+        switch(action.type) {
+            case MapTooltipActionsTypes.showTooltip:
+                this.showTooltip(action);
+                break;
+            case MapTooltipActionsTypes.hideTooltip:
+                this.hideTooltip();
+                break;
+        }
+        
+    }
+
+    showTooltip(action: ShowMapTooltip) {
+        // set position
+        this.tooltipState = {
+            visible: true,
+            x: action.payload.x,
+            y: action.payload.y
+        };
+        // set the data
+        // set visible to true
+    }
+
+    hideTooltip() {
+        this.tooltipState = {
+            visible: false,
+            x: 0,
+            y: 0
+        };
+        // set the position
+        // set visible to false
     }
 }

@@ -6,6 +6,7 @@ import * as topojson from 'topojson';
 import ObjectHelper from 'src/app/helpers/object.helper';
 import { IMapConfig, IMapData } from 'src/app/interfaces/chart.interfaces';
 import { DimensionsService } from 'src/app/services/dimensions.service';
+import { HideMapTooltip, MapTooltipActions, ShowMapTooltip } from 'src/app/actions/map-tooltip.actions';
 
 @Component({
   selector: 'app-chart8',
@@ -85,7 +86,7 @@ export class Chart8Component implements OnInit {
     this._config = ObjectHelper.UpdateObjectWithPartialValues(this._defaultConfig, values);
   }
 
-  @Output() tooltip = new EventEmitter<any>();
+  @Output() tooltip = new EventEmitter<MapTooltipActions>();
 
   get geodata() {
     return this._geodata;
@@ -178,13 +179,17 @@ export class Chart8Component implements OnInit {
     return this.colors(value);
   }
 
+  getFeatureId(feature): string {
+    return feature.properties.ISO3_CODE;
+  }
+
   setFeatures(){
     this.features = topojson.feature(this.geodata, this.geodata.objects['CNTR_RG_60M_2020_4326']);
   }
 
   setDataFeatures() {
     const ids = new Set(this.data.data.map((d) => d.id));
-    this.dataFeatures = this.features.features?.filter((feature) => ids.has(feature.properties.ISO3_CODE)) || [];
+    this.dataFeatures = this.features.features?.filter((feature) => ids.has(this.getFeatureId(feature))) || [];
   }
 
   setLabels() {
@@ -261,8 +266,12 @@ export class Chart8Component implements OnInit {
   }
 
   highlightLegendItems = (value: number | null) => {
+    const color = d3.color(this.color(value)).toString();
+
     this.containers.legend.selectAll('g.legend-item')
-      .classed('highlighted', (d) => d === value);
+      .classed('highlighted', (d, i, nodes) => {
+        return d3.select(nodes[i]).select('rect').style('fill') === color;
+      });
   }
 
   highlightFeatures = (value: number | null) => {
@@ -296,6 +305,12 @@ export class Chart8Component implements OnInit {
       .classed('highlighted faded', false);
   }
 
+  highlightFeature(feature) {
+    const id = this.getFeatureId(feature);
+    this.containers.data.selectAll('path.data')
+      .classed('highlighted', (d) => this.getFeatureId(d) === id);
+  }
+
   draw() {
     this.drawBaseLayer();
     this.drawDataLayer();
@@ -313,11 +328,47 @@ export class Chart8Component implements OnInit {
     .join('path')
     .attr('class', 'data')
     .attr('d', this.path)
-    .style('fill', (d) => this.color(this.getValueByFeature(d)));
+    .style('fill', (d) => this.color(this.getValueByFeature(d)))
+    .on('mouseenter', (event: MouseEvent, d) => {
+      const currentValue = this.getValueByFeature(d);
+      //highlight current feature
+      this.highlightFeature(d);
+      //highlight the legend item
+      this.highlightLegendItems(currentValue);
+      // show the tooltip
+      this.showTooltip(event, d);
+    })
+    .on('mouseleave', () => {
+      //reset the current feature
+      this.resetFeatures();
+      //reset he legend item
+      this.resetLegendItems();
+      //hide the tooltip
+      this.hideTooltip();
+    });
+  }
+
+  showTooltip(event: MouseEvent, feature: any) {
+    // country id (iso3) // x position, y position
+    const position = d3.pointer(event, this.svg.node());
+    const payload = {
+      id: this.getFeatureId(feature),
+      x: position[0],
+      y: position[1]
+    };
+
+    const action = new ShowMapTooltip(payload);
+    this.tooltip.emit(action);
+  }
+
+  hideTooltip() {
+    // no data needed
+    const action = new HideMapTooltip();
+    this.tooltip.emit(action);
   }
 
   getValueByFeature(feature: any): number {
-    const id = feature.properties.ISO3_CODE;
+    const id = this.getFeatureId(feature);
     return this.data.data.find((d) => d.id === id)?.value || null;
   }
 
