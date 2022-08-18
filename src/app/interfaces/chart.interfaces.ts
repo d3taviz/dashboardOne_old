@@ -159,4 +159,14 @@ export interface ITimelineConfig {
   axis: {
     color: string;
   };
+  circle: {
+    stroke: string;
+    fill: string;
+    radius: number;
+  };
+  values: {
+    decimalPlaces: number;
+    xPadding: number;
+    yPadding: number;
+  };
 }
