@@ -57,10 +57,15 @@
     </div>
     <div class="col-4">
       <div class="chart">
-        <app-chart8 [geodata]="geoCountries$ | async"
+        <div class="chart-body">
+          <app-chart8 [geodata]="geoCountries$ | async"
           [data]="covidMap.data" 
           (tooltip)="covidMap.tooltip($event)"
         ></app-chart8>
+        </div>
+        <div class="chart-controller">
+          <app-play-slider></app-play-slider>
+        </div>
         <div class="map-tooltip"
           [ngStyle]="{
             visibility: covidMap.tooltipState.visible ? '' : 'hidden',
