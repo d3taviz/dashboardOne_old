@@ -1,3 +1,4 @@
+import { style } from '@angular/animations';
 import { Component, ElementRef, Input, OnInit } from '@angular/core';
 
 import * as d3 from 'd3';
@@ -299,10 +300,14 @@ export class TimelineTooltipComponent implements OnInit {
       .attr('x', -this.config.values.xPadding)
       .attr('y', y);
     // set the date label
+
+    const isLeftSide = x < 0.5 * this.dimensions.innerWidth;
+
     this.svg.select('text.active-date')
       .text(d3.timeFormat(this.data.timeFormat)(this.data.activeTime))
-      .attr('x', x)
-      .attr('y', this.dimensions.innerHeight + this.config.values.yPadding);
+      .attr('x', x + (isLeftSide ? -this.config.values.yPadding : this.config.values.yPadding))
+      .attr('y', this.dimensions.innerHeight + this.config.values.yPadding)
+      .style('text-anchor', isLeftSide ? 'start' : 'end');
   }
 
   positionElements(): void {

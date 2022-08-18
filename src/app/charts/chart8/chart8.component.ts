@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 
 import * as d3 from 'd3';
 import * as topojson from 'topojson';
@@ -7,40 +7,41 @@ import ObjectHelper from 'src/app/helpers/object.helper';
 import { IMapConfig, IMapData } from 'src/app/interfaces/chart.interfaces';
 import { DimensionsService } from 'src/app/services/dimensions.service';
 import { HideMapTooltip, MapTooltipActions, ShowMapTooltip } from 'src/app/actions/map-tooltip.actions';
+import { debounceTime, fromEvent, map, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-chart8',
   template: `<svg class="chart8">
     <style>
       .chart8 path.countries {
-        fill: #fff;
-        stroke: #aaa;
+        fill: {{config.features.base.fill}};
+        stroke: {{config.features.base.stroke}};
       }
 
       .chart8 path.data {
-        stroke: none;
+        stroke: {{config.features.data.stroke}};
       }
 
       .chart8 text.title {
         text-anchor: middle;
-        font-size: 12px;
-        font-weight: bold;
+        font-size: {{config.title.fontSize}}px;
+        font-weight: {{config.title.fontWeight}};
         dominant-baseline: middle;
       }
 
       .chart8 .highlighted rect, .chart8 path.data.highlighted {
-        stroke: black;
+        stroke: {{config.features.highlighted.stroke}};
       }
 
       .chart8 .faded {
-        opacity: 0.3;
+        opacity: {{config.faded.opacity}};
       }
     </style>
   </svg>`,
   styleUrls: ['./chart8.component.scss'],
   providers: [DimensionsService]
 })
-export class Chart8Component implements OnInit {
+export class Chart8Component implements OnInit, OnDestroy {
 
   host: any;
   svg: any;
@@ -67,7 +68,37 @@ export class Chart8Component implements OnInit {
       left: 20,
       right: 20,
       bottom: 40
-    }
+    },
+    title: {
+      fontWeight: 'bold',
+      fontSize: 12
+    },
+    features: {
+      base: {
+        stroke: '#aaa',
+        fill: '#fff'
+      },
+      data: {
+        stroke: 'none'
+      },
+      highlighted: {
+        stroke: '#000'
+      }
+    },
+    faded: {
+      opacity: 0.3
+    },
+    nodata: {
+      color: '#b4b4b4',
+      label: 'no data'
+    },
+    legend: {
+      width: 30,
+      height: 10,
+      fontSize: 10,
+      nodataSeparator: 10
+    },
+    colors: d3.schemeOranges[9]
   }
 
   @Input() set geodata(values) {
@@ -100,6 +131,7 @@ export class Chart8Component implements OnInit {
     return this._config || this._defaultConfig;
   }
 
+  subscriptions: Subscription[] = [];
 
   constructor(element: ElementRef, public dimensions: DimensionsService) {
     this.host = d3.select(element.nativeElement);
@@ -108,11 +140,27 @@ export class Chart8Component implements OnInit {
    }
 
   ngOnInit(): void {
+
+    const resize$ = fromEvent(window, 'resize');
+
+    const subs = resize$
+    .pipe(
+      map((event: any) => event),
+      debounceTime(500)
+    )
+    .subscribe(() => this.resizeChart());
+
+    this.subscriptions.push(subs);
+
     this.setSvg();
     this.setDimensions();
     this.setElements();
     if (!this.geodata) { return; }
     this.updateChart();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.map((sub) => sub.unsubscribe());
   }
 
   setSvg() {
@@ -143,6 +191,11 @@ export class Chart8Component implements OnInit {
     this.draw();
   }
 
+  resizeChart() {
+    this.setDimensions();
+    this.updateChart();
+  }
+
   positioningElements() {
     this.containers.countries.attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
     this.containers.data.attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
@@ -169,12 +222,12 @@ export class Chart8Component implements OnInit {
   setColors() {
     this.colors = d3.scaleThreshold()
       .domain(this.data.thresholds.slice(2, this.data.thresholds.length))
-      .range(d3.schemeOranges[9]);
+      .range(this.config.colors);
   }
 
   color(value: number | null): string {
     if (value === null) {
-      return '#b4b4b4'
+      return this.config.nodata.color;
     }
     return this.colors(value);
   }
@@ -199,11 +252,11 @@ export class Chart8Component implements OnInit {
   setLegend() {
     const data = this.data.thresholds;
 
-    const width = 30;
-    const height = 10;
-    const fontSize = 10;
-    const nodataSeparator = 10;
-    const nodataLabel = 'no data';
+    const width = this.config.legend.width;
+    const height = this.config.legend.height;
+    const fontSize = this.config.legend.fontSize;
+    const nodataSeparator = this.config.legend.nodataSeparator;
+    const nodataLabel = this.config.nodata.label;
 
     const generateLegendItem = (selection) => {
       selection.append('rect')

@@ -118,6 +118,36 @@ export interface IMapData {
 
 export interface IMapConfig {
   margins: IChartMargins;
+  title: {
+    fontWeight: string;
+    fontSize: number;
+  };
+  features: {
+    base: {
+      stroke: string;
+      fill: string;
+    };
+    data: {
+      stroke: string;
+    };
+    highlighted: {
+      stroke: string;
+    }
+  };
+  faded: {
+    opacity: number;
+  };
+  nodata: {
+    color: string;
+    label: string;
+  };
+  legend: {
+    width: number;
+    height: number;
+    fontSize: number;
+    nodataSeparator: number;
+  };
+  colors: string[];
 }
 
 export interface ITooltipState {
@@ -169,4 +199,11 @@ export interface ITimelineConfig {
     xPadding: number;
     yPadding: number;
   };
+}
+
+export interface IPlaySlider {
+  min: number;
+  max: number;
+  step: number;
+  speed: number;
 }

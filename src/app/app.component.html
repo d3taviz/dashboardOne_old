@@ -64,7 +64,14 @@
         ></app-chart8>
         </div>
         <div class="chart-controller">
-          <app-play-slider></app-play-slider>
+          <app-play-slider
+            [min]="covidMap.sliderState.min"
+            [max]="covidMap.sliderState.max"
+            [step]="covidMap.sliderState.step"
+            [speed]="covidMap.sliderState.speed"
+            [value]="covidMap.currentDate"
+            (changeValue)="covidMap.setMapData($event)"
+          ></app-play-slider>
         </div>
         <div class="map-tooltip"
           [ngStyle]="{

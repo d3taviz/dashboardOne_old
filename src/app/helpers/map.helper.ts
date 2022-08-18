@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { MapTooltipActions, MapTooltipActionsTypes, ShowMapTooltip } from '../actions/map-tooltip.actions';
-import { IMapData, IMapDataElement, ITimelineData, ITooltipState } from '../interfaces/chart.interfaces';
+import { IMapData, IMapDataElement, IPlaySlider, ITimelineData, ITooltipState } from '../interfaces/chart.interfaces';
 
 export class MapHelper {
 
@@ -34,6 +34,13 @@ export class MapHelper {
         timeFormat: ''
     };
 
+    sliderState: IPlaySlider = {
+        min: 0,
+        max: 100,
+        step: 1000*60*60*24, //1 day
+        speed: 300,
+    };
+
     parseDate = (date: string): number => Date.parse(date);
 
     timeFormatTemplate = '%Y-%m-%d';
@@ -57,7 +64,7 @@ export class MapHelper {
         this.datesRange = d3.extent(this.fullDataSet, (d) => d.date);
         this.setMapData(this.datesRange[1])
 
-        console.log(this);
+        this.setSlider();
         
     }
 
@@ -112,5 +119,13 @@ export class MapHelper {
         };
         // set the position
         // set visible to false
+    }
+
+    setSlider() {
+        this.sliderState = {
+            ...this.sliderState,
+            min: this.datesRange[0],
+            max: this.datesRange[1]
+        };
     }
 }
