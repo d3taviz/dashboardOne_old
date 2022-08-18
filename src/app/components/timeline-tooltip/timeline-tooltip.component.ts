@@ -9,7 +9,34 @@ import { DimensionsService } from 'src/app/services/dimensions.service';
   template: `
     <svg class="timeline-tooltip">
       <style>
-        .timeline-tooltip {background-color: red;}
+        .timeline-tooltip {
+          background-color: {{config.background.color}};
+        }
+        .timeline-tooltip text.title {
+          text-align: center;
+          font-weight: {{config.title.fontWeight}};
+          font-size: {{config.title.fontSize}}px;
+          text-anchor: middle;
+          dominant-baseline: middle;
+        }
+        .timeline-tooltip .label {
+          font-size: {{config.labels.fontSize}}px;
+        }
+        .timeline-tooltip .axis, .timeline-tooltip .axis--max, .timeline-tooltip .active {
+          stroke: {{config.axis.color}};
+        }
+        .timeline-tooltip .axis--max, .timeline-tooltip .active {
+          stroke-dasharray: 1 1;
+        }
+        .timeline-tooltip path.line {
+          fill: none;
+          stroke: {{config.line.stroke}};
+        }
+        .timeline-tooltip path.area {
+          fill: {{config.area.fill}};
+          stroke: none;
+          opacity: {{config.area.opacity}};
+        }
       </style>
       <g class="title">
         <text class="title"></text>
@@ -37,6 +64,15 @@ export class TimelineTooltipComponent implements OnInit {
 
   host: any;
   svg: any;
+
+  maxValue: number;
+  activeValue: number;
+
+  scales: any = {};
+
+  line: any;
+
+  area: any;
 
   private _data: ITimelineData;
 
@@ -70,6 +106,16 @@ export class TimelineTooltipComponent implements OnInit {
     },
     labels: {
       fontSize: 9
+    },
+    line: {
+      stroke: 'rgb(253, 141, 60)'
+    },
+    area: {
+      fill: 'rgb(253, 141, 60)',
+      opacity: 0.5
+    },
+    axis: {
+      color: '#444'
     }
   }
 
@@ -94,11 +140,109 @@ export class TimelineTooltipComponent implements OnInit {
     this.dimensions.setMargins(this.config.margins);
   }
 
-  updateChart(): void {}
+  updateChart(): void {
+    this.positionElements();
+    //setParams
+    this.setParams();
+    //setLabels
+    this.setLabels();
+    //setLines
+    this.setLines();
+    // draw line and area
+    this.drawArea();
+    this.drawLine();
+    //setActiveData
+    this.drawActiveElements();
+  }
+
+  setParams(): void {
+    //calculate maximum value
+    this.calculateMaxValue();
+    //get the active value
+    this.getActiveValue();
+    //set the scales
+    this.setScales();
+    //set the area and line functions
+    this.setArea();
+    this.setLine();
+  }
+
+  calculateMaxValue(): void {
+    const maxIndex = d3.maxIndex(this.data.data, (d) => d.value);
+
+    this.maxValue = this.data.data[maxIndex].value;
+  }
+
+  getActiveValue(): void {
+    this.activeValue = this.data.data.find((d) => d.date === this.data.activeTime)?.value || null;
+  }
+
+  setScales(): void {
+    const xdomain = d3.extent(this.data.data, (d) => d.date);
+    
+    this.scales.x = d3.scaleLinear()
+      .domain(xdomain)
+      .range([0, this.dimensions.innerWidth]);
+
+    this.scales.y = d3.scaleLinear()
+      .domain([0, this.maxValue])
+      .range([this.dimensions.innerHeight, 0]);
+  }
+
+  setArea(): void {
+    const y0 = this.dimensions.innerHeight;
+
+    this.area = d3.area()
+      .defined((d) => d.value !== null)
+      .x((d) => this.scales.x(d.date))
+      .y0(y0)
+      .y1((d) => this.scales.y(d.value));
+  }
+
+  setLine(): void {
+    this.line = d3.line()
+      .defined((d) => d.value !== null)
+      .x((d) => this.scales.x(d.date))
+      .y((d) => this.scales.y(d.value));
+  }
+
+  setLabels(): void {
+    this.svg.select('text.title').text(this.data.title);
+    //set maximum value
+    this.svg.select('text.max-value').text(this.maxValue);
+  }
+
+  setLines(): void {
+    this.svg.select('line.axis--x')
+      .attr('x1', 0)
+      .attr('x2', this.dimensions.innerWidth)
+      .attr('y1', this.dimensions.innerHeight)
+      .attr('y2', this.dimensions.innerHeight);
+
+    this.svg.select('line.axis--max')
+      .attr('x1', 0)
+      .attr('x2', this.dimensions.innerWidth)
+      .attr('y1', 0)
+      .attr('y2', 0);
+  }
+
+  drawLine(): void {
+    const data = this.data.data;
+
+    this.svg.select('path.line')
+      .attr('d', this.line(data));
+  }
+
+  drawArea(): void {
+    const data = this.data.data;
+
+    this.svg.select('path.area')
+      .attr('d', this.area(data));
+  }
 
   positionElements(): void {
     this.svg.select('g.title')
-      .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.midMarginTop})`);
+      .attr('transform', `translate(${this.dimensions.midWidth}, ${this.dimensions.midMarginTop})`);
 
     this.svg.selectAll('g.container, g.active-container')
       .attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
