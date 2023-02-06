@@ -34,7 +34,7 @@ export class Chart6Component implements OnInit, OnChanges {
   // state
   hiddenIds = new Set();
 
-  @Input() data: IPieData;
+  @Input() data: IPieData = { title: '', data: [] };
 
   @Input() set config(values) {
     this._config = ObjectHelper.UpdateObjectWithPartialValues<IPieConfig>(this._defaultConfig, values);
@@ -44,7 +44,7 @@ export class Chart6Component implements OnInit, OnChanges {
     return this._config || this._defaultConfig;
   }
 
-  private _config: IPieConfig;
+  private _config: IPieConfig = {} as any;
 
   private _defaultConfig: IPieConfig = {
     innerRadiusCoef: 0.7,
@@ -71,11 +71,11 @@ export class Chart6Component implements OnInit, OnChanges {
   };
 
   //dimensions
-  dimensions: DOMRect;
+  dimensions: DOMRect = new DOMRect();
 
-  innerWidth: number;
-  innerHeight: number;
-  radius: number;
+  innerWidth: number = 300;
+  innerHeight: number = 150;
+  radius: number = 3;
   innerRadius = 0;
 
   get margins() {
@@ -148,21 +148,22 @@ export class Chart6Component implements OnInit, OnChanges {
 
     // pie generator
     this.pie = d3.pie()
-      .value((d) => d.value)
-      .sort((a, b) => d3.ascending(a.id, b.id));
+      .value((d: any) => d.value)
+      .sort((a: any, b: any) => d3.ascending(a.id, b.id));
 
     // color scale
     this.colors = d3.scaleOrdinal(d3.schemeCategory10)
-      .domain(this.ids);
+      .domain(this.ids as any);
 
     const chart = this;
 
-    this.arcTween = function(d) {
+    this.arcTween = function(d: any) {
       const current = d;
-      const previous = this._previous;
+      const parent: any = this;
+      const previous = parent._previous;
       const interpolate = d3.interpolate(previous, current);
-      this._previous = current;
-      return function(t) {
+      parent._previous = current;
+      return function(t: number) {
         return chart.arc(interpolate(t));
       }
     }
@@ -180,30 +181,30 @@ export class Chart6Component implements OnInit, OnChanges {
       .data(data)
       .join('g')
         .attr('class', 'legend-item')
-        .attr('transform', (d, i) => `translate(0, ${i * this.config.legendItem.height})`)
-        .style('opacity', (d) => this.hiddenIds.has(d.id) ? this.config.hiddenOpacity : null)
-        .on('mouseenter', (event, d) => this.setHighlights(d.id))
+        .attr('transform', (d: any, i: number) => `translate(0, ${i * this.config.legendItem.height})`)
+        .style('opacity', (d: any) => this.hiddenIds.has(d.id) ? this.config.hiddenOpacity : null)
+        .on('mouseenter', (event: any, d: any) => this.setHighlights(d.id))
         .on('mouseleave', () => this.resetHighlights())
-        .on('click', (event, d) => this.toggleHighlight(d.id));
+        .on('click', (event: any, d: any) => this.toggleHighlight(d.id));
 
     // add symbols
     this.legendContainer.selectAll('g.legend-item')
       .selectAll('rect')
-      .data((d) => [d])
+      .data((d: any) => [d])
       .join('rect')
         .attr('width', this.config.legendItem.symbolSize)
         .attr('height', this.config.legendItem.symbolSize)
-        .style('fill', (d) => this.colors(d.id));
+        .style('fill', (d: any) => this.colors(d.id));
 
     // add labels
     this.legendContainer.selectAll('g.legend-item')
       .selectAll('text')
-      .data((d) => [d])
+      .data((d: any) => [d])
       .join('text')
       .style('font-size', this.config.legendItem.fontSize + 'px')
       .attr('x', this.config.legendItem.textSeparator)
       .attr('y', this.config.legendItem.symbolSize)
-      .text((d) => d.label);
+      .text((d: any) => d.label);
 
     // reposition legend
     const dimensions = this.legendContainer.node().getBBox();
@@ -230,20 +231,20 @@ export class Chart6Component implements OnInit, OnChanges {
 
     this.dataContainer
       .selectAll('path.data')
-      .data(data, d => d.data.id)
+      .data(data, (d: any) => d.data.id)
       .join(
-        enter => enter.append('path'),
-        update => update,
-        exit => exit.transition()
+        (enter: any) => enter.append('path'),
+        (update: any) => update,
+        (exit: any) => exit.transition()
           .duration(1000)
           .attrTween('d', exitArcTween)
           .remove()
       )
         .attr('class', 'data')
-        .style('fill', (d) => this.colors(d.data.id))
+        .style('fill', (d: any) => this.colors(d.data.id))
         .style('stroke', this.config.arcs.stroke)
         .style('stroke-width', this.config.arcs.strokeWidth)
-        .on('mouseenter', (event, d) => this.setHighlights(d.data.id))
+        .on('mouseenter', (event: any, d: any) => this.setHighlights(d.data.id))
         .on('mouseleave', () => this.resetHighlights())
         .transition()
         .duration(1000)
@@ -252,14 +253,14 @@ export class Chart6Component implements OnInit, OnChanges {
   }
 
 //  highlight() {}
-  setHighlights(id) {
+  setHighlights(id: any) {
     if (this.hiddenIds.has(id)) { return; }
 
     this.dataContainer.selectAll('path.data')
-    .style('opacity', (d) => d.data.id === id ? null : this.config.hiddenOpacity);
+    .style('opacity', (d: any) => d.data.id === id ? null : this.config.hiddenOpacity);
 
     this.legendContainer.selectAll('g.legend-item')
-    .style('opacity', (d) => d.id === id ? null : this.config.hiddenOpacity);
+    .style('opacity', (d: any) => d.id === id ? null : this.config.hiddenOpacity);
   }
 
   resetHighlights() {
@@ -267,10 +268,10 @@ export class Chart6Component implements OnInit, OnChanges {
     .style('opacity', null);
 
     this.legendContainer.selectAll('g.legend-item')
-    .style('opacity', (d) => !this.hiddenIds.has(d.id) ? null : this.config.hiddenOpacity);
+    .style('opacity', (d: any) => !this.hiddenIds.has(d.id) ? null : this.config.hiddenOpacity);
   }
 
-  toggleHighlight(id) {
+  toggleHighlight(id: any) {
     this.hiddenIds.has(id) ? this.hiddenIds.delete(id) : this.hiddenIds.add(id);
     this.updateChart();
   }

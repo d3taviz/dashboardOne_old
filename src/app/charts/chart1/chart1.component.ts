@@ -7,19 +7,19 @@ import { Component, OnInit, ElementRef, Input, OnChanges, SimpleChanges } from '
 })
 export class Chart1Component implements OnInit, OnChanges {
 
-  @Input() data;
+  @Input() data: any;
   xlabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
   rectWidth = 80;
   max = 250;
-  dimensions: DOMRect;
+  dimensions: DOMRect = new DOMRect();
   outerPadding = 20;
   padding = 0;
   bandwidth = 0;
   bandwidthCoef = 0.8; // 80% = 0.8;
   left = 10; right = 20; bottom = 16; top = 15;
-  innerWidth: number;
-  innerHeight: number;
+  innerWidth: number = 300;
+  innerHeight: number = 150;
 /*   margin = {
     left: 10,
     right: 20,

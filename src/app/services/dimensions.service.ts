@@ -6,7 +6,7 @@ import { IChartMargins } from "../interfaces/chart.interfaces";
 export class DimensionsService {
     private dimensions: DOMRect = new DOMRect();
 
-    private margins: IChartMargins;
+    private margins: IChartMargins = { top: 0, right: 0, bottom: 0, left: 0 };
 
     private _defaultMargins = {top: 0, right: 0, bottom: 0, left: 0};
   

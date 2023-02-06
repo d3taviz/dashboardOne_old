@@ -56,7 +56,7 @@ export class PlaySliderComponent implements OnInit {
     this.paused ? this.play() : this.pause();
   }
 
-  onChangeValue(event) {
+  onChangeValue(event: any) {
     const value = +event.target.value;
     this.value = value;
     this.changeValue.emit(value);

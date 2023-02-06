@@ -1,4 +1,3 @@
-import { style } from '@angular/animations';
 import { Component, ElementRef, Input, OnInit } from '@angular/core';
 
 import * as d3 from 'd3';
@@ -73,8 +72,8 @@ export class TimelineTooltipComponent implements OnInit {
   host: any;
   svg: any;
 
-  maxValue: number;
-  activeValue: number;
+  maxValue: number = 0;
+  activeValue: number | null = null;
 
   scales: any = {};
 
@@ -82,7 +81,7 @@ export class TimelineTooltipComponent implements OnInit {
 
   area: any;
 
-  private _data: ITimelineData;
+  private _data: ITimelineData = {title: '', data: [], activeTime: null as any, timeFormat: ''};
 
   @Input() set data(values) {
     this._data = values;
@@ -203,7 +202,7 @@ export class TimelineTooltipComponent implements OnInit {
   }
 
   setScales(): void {
-    const xdomain = d3.extent(this.data.data, (d) => d.date);
+    const xdomain = d3.extent(this.data.data, (d) => d.date) as [number, number];
     
     this.scales.x = d3.scaleLinear()
       .domain(xdomain)
@@ -218,17 +217,17 @@ export class TimelineTooltipComponent implements OnInit {
     const y0 = this.dimensions.innerHeight;
 
     this.area = d3.area()
-      .defined((d) => d.value !== null)
-      .x((d) => this.scales.x(d.date))
+      .defined((d: any) => d.value !== null)
+      .x((d: any) => this.scales.x(d.date))
       .y0(y0)
-      .y1((d) => this.scales.y(d.value));
+      .y1((d: any) => this.scales.y(d.value));
   }
 
   setLine(): void {
     this.line = d3.line()
-      .defined((d) => d.value !== null)
-      .x((d) => this.scales.x(d.date))
-      .y((d) => this.scales.y(d.value));
+      .defined((d: any) => d.value !== null)
+      .x((d: any) => this.scales.x(d.date))
+      .y((d: any) => this.scales.y(d.value));
   }
 
   setLabels(): void {
@@ -304,7 +303,7 @@ export class TimelineTooltipComponent implements OnInit {
     const isLeftSide = x < 0.5 * this.dimensions.innerWidth;
 
     this.svg.select('text.active-date')
-      .text(d3.timeFormat(this.data.timeFormat)(this.data.activeTime))
+      .text(d3.timeFormat(this.data.timeFormat)(this.data.activeTime as any))
       .attr('x', x + (isLeftSide ? -this.config.values.yPadding : this.config.values.yPadding))
       .attr('y', this.dimensions.innerHeight + this.config.values.yPadding)
       .style('text-anchor', isLeftSide ? 'start' : 'end');

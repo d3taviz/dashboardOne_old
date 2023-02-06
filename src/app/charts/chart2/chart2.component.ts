@@ -7,19 +7,19 @@ import { Component, OnInit, ElementRef, Input, OnChanges, SimpleChanges } from '
 })
 export class Chart2Component implements OnInit, OnChanges {
 
-  @Input() data;
+  @Input() data: any;
   xlabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
   rectWidth = 80;
   max = 250;
-  dimensions: DOMRect;
+  dimensions: DOMRect = new DOMRect();
   outerPadding = 20;
   padding = 0;
   bandwidth = 0;
   bandwidthCoef = 0.8; // 80% = 0.8;
   left = 10; right = 20; bottom = 16; top = 15;
-  innerWidth: number;
-  innerHeight: number;
+  innerWidth: number = 300;
+  innerHeight: number = 150;
 /*   margin = {
     left: 10,
     right: 20,
@@ -53,7 +53,7 @@ export class Chart2Component implements OnInit, OnChanges {
     this.bandwidth = this.bandwidthCoef * this.rectWidth;
     this.padding = (1 - this.bandwidthCoef) * this.rectWidth;
 
-    this.max = 1.3 * Math.max(...data.map((item) => item.employee_salary)); // 1.3 = 130%
+    this.max = 1.3 * Math.max(...data.map((item: any) => item.employee_salary)); // 1.3 = 130%
   }
 
 }

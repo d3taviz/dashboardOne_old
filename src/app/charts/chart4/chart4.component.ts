@@ -22,16 +22,16 @@ export class Chart4Component implements OnInit, OnChanges {
   xLabel: any;
   yLabel: any;
 
-  @Input() data;
+  @Input() data: any;
 
   // user options
-  xValue: string;
-  yValue: string;
+  xValue: string = '';
+  yValue: string = '';
 
   // dimensions
-  dimensions: DOMRect;
-  innerWidth: number;
-  innerHeight: number;
+  dimensions: DOMRect = new DOMRect();
+  innerWidth: number = 300;
+  innerHeight: number = 150;
 
   margins = {
     left: 40,
@@ -52,7 +52,7 @@ export class Chart4Component implements OnInit, OnChanges {
   get scatterData() {
     if (!this.xValue || !this.yValue) { return []; }
 
-    return this.data.map((elem) => {
+    return this.data.map((elem: any) => {
       return {
         x: +elem[this.xValue],
         y: +elem[this.yValue],
@@ -78,7 +78,7 @@ export class Chart4Component implements OnInit, OnChanges {
     this.updateChart();
   }
 
-  setOption(option: string, event) {
+  setOption(option: string, event: any) {
     const value = event && event.target && event.target.value;
 
     switch(option) {
@@ -145,9 +145,9 @@ export class Chart4Component implements OnInit, OnChanges {
   }
 
   setParams() {
-    const maxXValue = this.xValue ? d3.max(this.data, (d) => +d[this.xValue]) : 1;
-    const maxYValue = this.yValue ? d3.max(this.data, (d) => +d[this.yValue]) : 1;
-    const uniqueSpecies = new Set((this.data || []).map((d) => d.Species));
+    const maxXValue: number = this.xValue ? d3.max(this.data, (d: any) => +d[this.xValue]) as number : 1;
+    const maxYValue: number = this.yValue ? d3.max(this.data, (d: any) => +d[this.yValue]) as number : 1;
+    const uniqueSpecies: any = new Set((this.data || []).map((d: any) => d.Species));
 
     this.x = d3.scaleLinear()
       .domain([0, maxXValue])
@@ -202,11 +202,11 @@ export class Chart4Component implements OnInit, OnChanges {
       .append('circle')
       .attr('class', 'data')
       .attr('r', 4)
-      .style('fill', (d) => this.colors(d.species))
+      .style('fill', (d: any) => this.colors(d.species))
       .style('opacity', 0.4)
       .merge(scatter)
-      .attr('cx', (d) => this.x(d.x))
-      .attr('cy', (d) => this.y(d.y));
+      .attr('cx', (d: any) => this.x(d.x))
+      .attr('cy', (d: any) => this.y(d.y));
 
     // exit
     scatter.exit().remove();

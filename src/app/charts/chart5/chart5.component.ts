@@ -10,17 +10,17 @@ import { merge } from 'rxjs';
 })
 export class Chart5Component implements OnInit, OnChanges {
 
-  @Input() data;
+  @Input() data: any;
 
   // main elements
   host: any;
   svg: any;
 
   // dimensions
-  dimensions: DOMRect;
+  dimensions: DOMRect = new DOMRect();
 
-  innerWidth: number;
-  innerHeight: number;
+  innerWidth: number = 300;
+  innerHeight: number = 150;
 
   margins = {
     left: 50,
@@ -70,16 +70,16 @@ export class Chart5Component implements OnInit, OnChanges {
     if (!this.data) { return []; }
 
     return this.selected
-      .filter((d, i) => this.active[i])
+      .filter((d: any, i: number) => this.active[i])
       .map((item) => {
         return {
           name: item,
-          data: this.data.map((d) => ({
+          data: this.data.map((d: any) => ({
             x: this.timeParse(d.date),
             y: d[item]
           }))
-          .filter((d) => d.y != null)
-          .sort((a, b) => a.x < b.x ? -1 : 1)
+          .filter((d: any) => d.y != null)
+          .sort((a: any, b: any) => a.x < b.x ? -1 : 1)
         };
       });
   }
@@ -145,13 +145,13 @@ export class Chart5Component implements OnInit, OnChanges {
     const data = this.lineData;
 
     // temporary solution
-    const parsedDates = !this.data ? [] : this.data.map((d) => this.timeParse(d.date));
+    const parsedDates = !this.data ? [] : this.data.map((d: any) => this.timeParse(d.date));
 
 
     // domains
     const xDomain = !!parsedDates ? d3.extent(parsedDates) : [0, Date.now()];
 
-    const maxValues = data.map((series) => d3.max(series.data, (d) => d.y));
+    const maxValues = data.map((series) => series.data && d3.max(series.data, (d: any) => d.y)) || [0, 0];
 
     const yDomain = !this.data ? [0, 100] : [0, d3.max(maxValues)];
 
@@ -164,7 +164,7 @@ export class Chart5Component implements OnInit, OnChanges {
 
     // set scales
     this.x = d3.scaleTime()
-      .domain(xDomain)
+      .domain(xDomain as any)
       .range(xRange);
 
     this.y = d3.scaleLinear()
@@ -177,8 +177,8 @@ export class Chart5Component implements OnInit, OnChanges {
 
     // line
     this.line = d3.line()
-    .x((d) => this.x(d.x))
-    .y((d) => this.y(d.y));
+    .x((d: any) => this.x(d.x))
+    .y((d: any) => this.y(d.y));
 
   }
 
@@ -199,7 +199,7 @@ export class Chart5Component implements OnInit, OnChanges {
     this.yAxis = d3.axisLeft(this.y)
       .ticks(8)
       .tickSizeOuter(0)
-      .tickFormat(d3.format('~s'))
+      .tickFormat(d3.format('~s') as any)
       .tickSizeInner(-this.innerWidth);
 
     this.yAxisContainer
@@ -228,14 +228,14 @@ export class Chart5Component implements OnInit, OnChanges {
         .style('font-size', '0.8rem');
     }
 
-    const updateLegendItems = (selection) => {
+    const updateLegendItems = (selection: any) => {
       selection
         .selectAll('circle.legend-icon')
-        .style('fill', (d) => this.colors(d));
+        .style('fill', (d: any) => this.colors(d));
 
       selection
         .selectAll('text.legend-label')
-        .text((d) => d);
+        .text((d: any) => d);
     }
 
     // 1. select item containers and bind data
@@ -248,15 +248,15 @@ export class Chart5Component implements OnInit, OnChanges {
         .call(generateLegendItems)
       .merge(itemContainers)
         .call(updateLegendItems)
-        .on('mouseover', (event, name) => this.hoverLine(name))
+        .on('mouseover', (event: any, name: any) => this.hoverLine(name))
         .on('mouseleave', () => this.hoverLine())
-        .on('click', (event, name) => {
+        .on('click', (event: any, name: any) => {
           this.toggleActive(name);
           this.updateChart();
         })
         .transition()
         .duration(500)
-        .style('opacity', (d, i) => this.active[i] ? 1 : 0.3);
+        .style('opacity', (d: any, i: number) => this.active[i] ? 1 : 0.3);
 
     //   b. bind events (click + hover)
 
@@ -273,8 +273,8 @@ export class Chart5Component implements OnInit, OnChanges {
       let totalPadding = 0;
 
       this.legendContainer.selectAll('g.legend-item')
-      .each(function() {
-        const g = d3.select(this);
+      .each((d: any, i: number, groups: any) => {
+        const g = d3.select(groups[i]);
         g.attr('transform', `translate(${totalPadding}, 0)`);
         totalPadding += g.node().getBBox().width + 10;
       });
@@ -291,7 +291,7 @@ export class Chart5Component implements OnInit, OnChanges {
   draw() {
     // binding data
     const lines = this.dataContainer.selectAll('path.data')
-      .data(this.lineData, (d) => d.name);
+      .data(this.lineData, (d: any) => d.name);
 
     // enter and merge
     lines.enter().append('path')
@@ -301,8 +301,8 @@ export class Chart5Component implements OnInit, OnChanges {
       .merge(lines)
       .transition()
       .duration(500)
-      .attr('d', (d) => this.line(d.data))
-      .style('stroke', (d) => this.colors(d.name));
+      .attr('d', (d: any) => this.line(d.data))
+      .style('stroke', (d: any) => this.colors(d.name));
 
     // exit
     lines.exit().remove();
@@ -322,12 +322,12 @@ export class Chart5Component implements OnInit, OnChanges {
   }
 
   hoverLine(selected?: string) {
-    const index = this.selected.indexOf(selected);
+    const index = selected ? this.selected.indexOf(selected) : -1;
 
     if (selected && this.active[index]) {
       this.dataContainer.selectAll('path.data')
-      .attr('opacity', (d) => d.name === selected ? 1 : 0.3)
-      .style('stroke-width', (d) => d.name === selected ? '3px' : '2px');
+      .attr('opacity', (d: any) => d.name === selected ? 1 : 0.3)
+      .style('stroke-width', (d: any) => d.name === selected ? '3px' : '2px');
     } else {
       this.dataContainer.selectAll('path.data')
       .style('stroke-width', '2px')

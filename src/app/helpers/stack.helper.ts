@@ -3,15 +3,15 @@ import * as d3 from 'd3';
 import { IChartMargins, IGroupStackDataElem } from '../interfaces/chart.interfaces';
 
 export class StackHelper {
-  static SetStacks<T>(data: T[], domainAttr: string, groupAttr: string, stackAttr: string, valueAttr: string, valueFormatter = (value) => value): IGroupStackDataElem[] {
+  static SetStacks<T>(data: T[], domainAttr: keyof T, groupAttr: keyof T, stackAttr: keyof T, valueAttr: keyof T, valueFormatter = (value: any) => value): IGroupStackDataElem[] {
 
-    const calcKey = (elem): string => {
-      const removeUndefined = (d) => d === undefined ? '' : '__' + d;
+    const calcKey = (elem: any): string => {
+      const removeUndefined = (d: any) => d === undefined ? '' : '__' + d;
       return elem[0] + removeUndefined(elem[1]) + removeUndefined(elem[2]);
     }
 
-    return d3.flatRollup(data, v => d3.sum(v, d => d[valueAttr]) , d => d[domainAttr], d => d[groupAttr], d => d[stackAttr])
-    .map((elem) => ({
+    return d3.flatRollup(data, (v: any) => d3.sum(v, (d: any) => d[valueAttr]) , d => d[domainAttr], d => d[groupAttr], d => d[stackAttr])
+    .map((elem: any) => ({
       key: calcKey(elem),
       domain: elem[0],
       group: elem[1] || null,

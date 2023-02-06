@@ -19,13 +19,13 @@ export class AppComponent implements OnInit, OnDestroy {
   subscrtiptions: Subscription[] = [];
 
   data1 = [125, 100, 50, 75, 200, 300, 100];
-  data2$: Observable<any[]>;
+  data2$: Observable<any[]> = new Observable();;
 
-  iris$: Observable<any>;
+  iris$: Observable<any> = new Observable();
 
-  covidData$: Observable<any>;
+  covidData$: Observable<any> = new Observable();
 
-  browser$: Observable<any>;
+  browser$: Observable<any> = new Observable();
   browser: any;
 
   pieData: IPieData = {
@@ -33,20 +33,20 @@ export class AppComponent implements OnInit, OnDestroy {
     data: []
   };
 
-  pieConfig = {};
+  pieConfig = {} as any;
 
   pieConfig2 = {
     innerRadiusCoef: 0,
     arcs: {
       radius: 0,
     },
-  };
+  } as any;
 
-  population$: Observable<any>;
+  population$: Observable<any> = new Observable();
 
-  population;
+  population = [];
 
-  stackedData: IGroupStackData;
+  stackedData: IGroupStackData = {} as any ;
 
   stackOptions = [
     {
@@ -74,9 +74,9 @@ export class AppComponent implements OnInit, OnDestroy {
   ];
 
   // map observables
-  geoCountries$: Observable<any>;
-  covidByCountry$: Observable<any>;
-  countrycodes$: Observable<any>;
+  geoCountries$: Observable<any> = new Observable();
+  covidByCountry$: Observable<any> = new Observable();
+  countrycodes$: Observable<any> = new Observable();
 
   covidMap = new MapHelper();
 
@@ -152,17 +152,17 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   } */
 
-  setPieData(event) {
+  setPieData(event: any) {
     const valueAttr = typeof event === 'string' ? event : event.target.value;
     this.pieData = PieHelper.convert(this.browser, "Browser market share", valueAttr, 'name', 'name');
   }
 
-  setStackedData(event) {
+  setStackedData(event: any) {
     const valueAttr = typeof event === 'string' ? event : event.target.value;
 
     const [domain, group, stack, year] = valueAttr.split('/');
 
-    const population = year == '' ? this.population : this.population.filter((d) => d.year === year);
+    const population = year == '' ? this.population : this.population.filter((d: any) => d.year === year);
 
     const data = StackHelper.SetStacks(population, domain, group, stack, 'value', (val) => val/1e6);
 

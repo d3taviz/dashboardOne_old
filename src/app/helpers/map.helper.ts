@@ -13,7 +13,7 @@ export class MapHelper {
 
     currentDate = 0;
 
-    datesRange: [number, number];
+    datesRange: [number, number] = [0, 1];
 
     data: IMapData = {
         title: 'Covid-19 new death cases',
@@ -29,7 +29,7 @@ export class MapHelper {
 
     tooltipData: ITimelineData = {
         title: '',
-        activeTime: null,
+        activeTime: 0,
         data: [],
         timeFormat: ''
     };
@@ -47,12 +47,12 @@ export class MapHelper {
 
     timeFormat = d3.timeFormat(this.timeFormatTemplate);
 
-    setData(data, countryCodes, dataAttr = 'new_deaths_smoothed_per_million') {
-        const ids = new Map(countryCodes.map((code) => [code.location, code.iso3]));
+    setData(data: any, countryCodes: any, dataAttr = 'new_deaths_smoothed_per_million') {
+        const ids = new Map(countryCodes.map((code: any) => [code.location, code.iso3]));
 
-        this.countriesById = new Map(countryCodes.map((code) => [code.iso3, code.location]));
+        this.countriesById = new Map(countryCodes.map((code: any) => [code.iso3, code.location]));
        
-        this.fullDataSet = data.location.map((location, i) => ({
+        this.fullDataSet = data.location.map((location: any, i: number) => ({
             id: ids.get(location),
             value: data[dataAttr][i],
             date: this.parseDate(data.date[i])
@@ -61,7 +61,7 @@ export class MapHelper {
         this.dataByDate = d3.group(this.fullDataSet, (d) => d.date);
         this.dataByCountry = d3.group(this.fullDataSet, (d) => d.id);
         
-        this.datesRange = d3.extent(this.fullDataSet, (d) => d.date);
+        this.datesRange = d3.extent(this.fullDataSet, (d) => d.date) as [number, number];
         this.setMapData(this.datesRange[1])
 
         this.setSlider();
@@ -72,9 +72,9 @@ export class MapHelper {
         this.currentDate = date;
         
         this.data = {
-            title: `Covid-19 new death cases (${this.timeFormat(this.currentDate)})`,
-            data: this.dataByDate.get(this.currentDate),
-            thresholds: [null, 0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20]
+            title: `Covid-19 new death cases (${this.timeFormat(this.currentDate as any)})`,
+            data: this.dataByDate.get(this.currentDate) as any,
+            thresholds: [null as any, 0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20]
         };
     }
 
@@ -92,8 +92,8 @@ export class MapHelper {
 
     setTooltipData(id: string) {
         this.tooltipData = {
-            title: this.countriesById.get(id),
-            data: this.dataByCountry.get(id),
+            title: this.countriesById.get(id) || '',
+            data: this.dataByCountry.get(id) || [],
             activeTime: this.currentDate,
             timeFormat: this.timeFormatTemplate
         };

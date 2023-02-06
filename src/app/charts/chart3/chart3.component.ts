@@ -15,13 +15,13 @@ export class Chart3Component implements OnInit, OnChanges {
   yAxisContainer: any;
   textLabel: any;
 
-  @Input() data;
+  @Input() data: any;
 
   rectWidth = 30;
   padding = 5;
-  dimensions: DOMRect;
-  innerWidth;
-  innerHeight;
+  dimensions: DOMRect = new DOMRect();
+  innerWidth = 300;
+  innerHeight = 150;
   xAxis: any;
   yAxis: any;
   left = 60; right = 20; bottom = 80; top = 35;
@@ -33,8 +33,8 @@ export class Chart3Component implements OnInit, OnChanges {
 
   get barsData() {
     return this.sortedBySalary
-    ? this.data.sort((a, b) => +b.employee_salary - a.employee_salary)
-    : this.data.sort((a, b) => a.employee_name < b.employee_name ? -1 : 1);
+    ? this.data.sort((a: any, b: any) => +b.employee_salary - a.employee_salary)
+    : this.data.sort((a: any, b: any) => a.employee_name < b.employee_name ? -1 : 1);
   }
 
   constructor(element: ElementRef) {
@@ -99,11 +99,11 @@ export class Chart3Component implements OnInit, OnChanges {
     this.textLabel.text('Employee salary');
   }
 
-  getEmployeeName = (id) => this.data.find((d) => d.id === id).employee_name;
+  getEmployeeName = (id: any) => this.data.find((d: any) => d.id === id).employee_name;
 
   setAxis() {
 
-    const updateXAxis = (xAxisContainer) => {
+    const updateXAxis = (xAxisContainer: any) => {
       xAxisContainer.call(this.xAxis);
 
       xAxisContainer
@@ -132,24 +132,24 @@ export class Chart3Component implements OnInit, OnChanges {
   }
 
   setParams() {
-    const ids = this.barsData.map((d) => d.id);
+    const ids = this.barsData.map((d: any) => d.id);
     this.x.domain(ids).range([0, this.innerWidth]);
-    const max_salary = 1.3 * Math.max(...this.data.map((item) => item.employee_salary));
+    const max_salary = 1.3 * Math.max(...this.data.map((item: any) => item.employee_salary));
     this.y.domain([0, max_salary]).range([this.innerHeight, 0]);
   }
 
   draw() {
     const bars = this.dataContainer.selectAll('rect')
-    .data(this.barsData || [], (d) => d.id);
+    .data(this.barsData || [], (d: any) => d.id);
 
     bars.enter().append('rect')
     .merge(bars)
     .transition()
     .duration(500)
-    .attr('x', (d) => this.x(d.id))
+    .attr('x', (d: any) => this.x(d.id))
     .attr('width', this.x.bandwidth())
-    .attr('y', (d) => this.y(d.employee_salary))
-    .attr('height', (d) => this.innerHeight - this.y(d.employee_salary));
+    .attr('y', (d: any) => this.y(d.employee_salary))
+    .attr('height', (d: any) => this.innerHeight - this.y(d.employee_salary));
 
     bars.exit().remove();
   }
