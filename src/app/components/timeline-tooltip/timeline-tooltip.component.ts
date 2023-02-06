@@ -195,7 +195,7 @@ export class TimelineTooltipComponent implements OnInit {
   calculateMaxValue(): void {
     const maxIndex = d3.maxIndex(this.data.data, (d) => d.value);
 
-    this.maxValue = this.data.data[maxIndex].value;
+    this.maxValue = this.data.data[maxIndex]?.value;
   }
 
   getActiveValue(): void {
