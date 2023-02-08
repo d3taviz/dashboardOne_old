@@ -60,7 +60,7 @@ export class Chart8Component implements OnInit, OnDestroy {
 
   private _data: IMapData = {title: '', data: [], thresholds: []};
 
-  private _config: IMapConfig = {} as any;
+  private _config: IMapConfig = null as any;
 
   private _defaultConfig: IMapConfig = {
     margins: {
@@ -237,6 +237,7 @@ export class Chart8Component implements OnInit, OnDestroy {
   }
 
   setFeatures(){
+    if (!this.geodata) { return; }
     this.features = topojson.feature(this.geodata, this.geodata.objects['CNTR_RG_60M_2020_4326']);
   }
 

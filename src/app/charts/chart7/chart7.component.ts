@@ -113,7 +113,7 @@ export class Chart7Component implements OnInit, OnChanges {
     return this._config;
   }
 
-  private _config: IGroupStackConfig = {} as any;
+  private _config: IGroupStackConfig = null as any;
 
   private _defaultConfig: IGroupStackConfig = {
     hiddenOpacity: 0.3,
@@ -167,7 +167,7 @@ export class Chart7Component implements OnInit, OnChanges {
 
   hiddenIds: Set<string> = new Set();
 
-  private _filteredData: IGroupStackDataElem[] = [];
+  private _filteredData: IGroupStackDataElem[] = null as any;
 
   get filteredData() {
     return this._filteredData || this.data.data;
@@ -179,7 +179,8 @@ export class Chart7Component implements OnInit, OnChanges {
 
   constructor(element: ElementRef) {
     this.host = d3.select(element.nativeElement);
-
+    console.log(this);
+    
    }
 
   ngOnInit(): void {
