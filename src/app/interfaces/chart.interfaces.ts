@@ -207,3 +207,17 @@ export interface IPlaySlider {
   step: number;
   speed: number;
 }
+
+export interface ISwarmDataElement {
+  id: string | number;
+  label: string;
+  value: number;
+  category: string | number;
+  group: string | number;
+}
+
+export interface ISwarmData {
+  title: string;
+  unit: string;
+  data: ISwarmDataElement[];
+}

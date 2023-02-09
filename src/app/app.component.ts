@@ -80,6 +80,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   covidMap = new MapHelper();
 
+  // swarm observables
+  demographics$: Observable<any> = new Observable();
+
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
@@ -132,6 +135,15 @@ export class AppComponent implements OnInit, OnDestroy {
       this.covidMap.setData(data, codes);
     });
     
+    this.subscrtiptions.push(subs);
+
+    // swarm subscriptions
+    this.demographics$ = this.api.getDemographics();
+
+    subs = this.demographics$.subscribe((data: any) => {
+      // convert data
+    });
+
     this.subscrtiptions.push(subs);
   }
 
