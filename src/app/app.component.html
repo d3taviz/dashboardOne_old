@@ -52,11 +52,6 @@
     </div>
     <div class="col-4">
       <div class="chart">
-        <app-chart6 [data]="pieData" [config]="pieConfig2"></app-chart6>
-      </div>
-    </div>
-    <div class="col-4">
-      <div class="chart">
         <div class="chart-body">
           <app-chart8 [geodata]="geoCountries$ | async"
           [data]="covidMap.data" 
@@ -82,6 +77,11 @@
         >
           <app-timeline-tooltip [data]="covidMap.tooltipData"></app-timeline-tooltip>
         </div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="chart">
+        <app-chart9></app-chart9>
       </div>
     </div>
   </div>
