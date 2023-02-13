@@ -6,6 +6,10 @@ export interface IChartMargins {
   left: number;
 }
 
+export interface IBaseConfig {
+  margins: IChartMargins;
+}
+
 export interface IPieDataElements {
   id: string | number;
   label: string;

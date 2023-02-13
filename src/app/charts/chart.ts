@@ -2,10 +2,13 @@ import { Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output }
 import { Selection } from 'd3-selection';
 import * as d3 from 'd3';
 import { Subscription } from "rxjs";
+import { IBaseConfig } from "../interfaces/chart.interfaces";
+import { DimensionsService } from "../services/dimensions.service";
+import { ObjectHelper } from '../helpers/object.helper';
 
 @Directive()
-export abstract class Chart<D, C> implements OnInit, OnDestroy {
-    constructor(element: ElementRef) {
+export abstract class Chart<D, C extends IBaseConfig> implements OnInit, OnDestroy {
+    constructor(element: ElementRef, protected dimensions: DimensionsService) {
         this.host = d3.select(element.nativeElement);
     }
 
@@ -17,15 +20,18 @@ export abstract class Chart<D, C> implements OnInit, OnDestroy {
     }
 
     get config() {
-        return this._config;
-    }
+        return this._config || this._defaultConfig;
+      }
 
     @Input() set data(data) {
         this._data = data;
+        this.dataIsInitialized = true;
+        this.onSetData();
     }
 
     @Input() set config(config) {
-        this._config = config;
+        this._config = ObjectHelper.UpdateObjectWithPartialValues(this._defaultConfig, config);
+        this.onSetConfig();
     }
 
     @Output() events = new EventEmitter<any>();
@@ -41,6 +47,8 @@ export abstract class Chart<D, C> implements OnInit, OnDestroy {
     dataIsInitialized: boolean = false;
 
     scales: any = {};
+
+    protected abstract _defaultConfig: C;
 
     // methods
     ngOnInit(): void {}
@@ -82,8 +90,8 @@ export abstract class Chart<D, C> implements OnInit, OnDestroy {
 
 
     // set data and config
-    setData(): void {}
-    setConfig(): void {}
+    abstract onSetData: () => void
+    abstract onSetConfig: () => void {}
 
 
 
