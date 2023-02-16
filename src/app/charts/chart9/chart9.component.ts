@@ -3,6 +3,7 @@ import { ISimulatedSwarmDataElement, ISwarmData, ISwarmDataElement } from 'src/a
 import { DimensionsService } from 'src/app/services/dimensions.service';
 import { Chart } from '../chart';
 import * as d3 from 'd3';
+import { ListLegendService } from 'src/app/services/list-legend.service';
 
 @Component({
   selector: 'app-chart9',
@@ -24,10 +25,10 @@ import * as d3 from 'd3';
   `,
   styles: [
   ],
-  providers: [DimensionsService]
+  providers: [DimensionsService, ListLegendService]
 })
 export class Chart9Component extends Chart<ISwarmData, any> {
-  constructor(element: ElementRef, dimensions: DimensionsService) {
+  constructor(element: ElementRef, dimensions: DimensionsService, protected legend: ListLegendService) {
     super(element, dimensions);
     console.log(this);
     
@@ -191,7 +192,9 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.select('text.yLabel').text(this.data.unit);
   }
   
-  setLegend = () => {}
+  setLegend = () => {
+    // set the legend items
+  }
 
   draw = () => {
     const data = this.scaledData;
