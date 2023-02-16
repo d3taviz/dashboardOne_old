@@ -74,23 +74,36 @@ export abstract class Chart<D, C extends IBaseConfig> implements OnInit, OnDestr
       }
 
     // run once
-    setSvg(): void {}
+    setSvg(): void {
+        this.svg = this.host.select<SVGSVGElement>('svg')
+            .attr('version', '1.1')
+            .attr('baseProfile', 'full')
+            .attr('xmlns', 'http://www.w3.org/2000/svg')
+            .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+            .attr('xmlns:ev', 'http://www.w3.org/2001/xml-events');
+    }
 
-    setDimensions(): void {}
+    setDimensions(): void {
+        const dimensions = this.svg?.node()?.getBoundingClientRect() || new DOMRect(300, 150);
+        this.dimensions.setDimensions(dimensions);
+        this.dimensions.setMargins(this.config.margins);
 
-    setElements(): void {}
+        this.svg.attr('viewbox', [0, 0, this.dimensions.width, this.dimensions.height]);
+    }
+
+    abstract setElements: () => void;
 
 
     // run on update chart
-    positionElements(): void {}
+    abstract positionElements: () => void;
 
-    setParams(): void {}
+    abstract setParams: () => void;
 
-    setLabels(): void {}
+    abstract setLabels: () => void;
 
-    setLegend(): void {}
+    abstract setLegend: () => void;
 
-    draw(): void {}
+    abstract draw: () => void;
 
 
     // subscriptions
@@ -122,8 +135,6 @@ export abstract class Chart<D, C extends IBaseConfig> implements OnInit, OnDestr
 
     // set data and config
     abstract onSetData: () => void
-    abstract onSetConfig: () => void {}
-
-
+    abstract onSetConfig: () => void
 
 }
