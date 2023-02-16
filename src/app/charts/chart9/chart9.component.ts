@@ -6,7 +6,21 @@ import * as d3 from 'd3';
 
 @Component({
   selector: 'app-chart9',
-  template: `<svg class="swarm-chart"></svg>
+  template: `<svg class="swarm-chart">
+    <style>
+      .swarm-chart .label {
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .swarm-chart .title {
+        font-weight: bold;
+        font-size: 12px;
+      }
+      .swarm-chart .yLabel {
+        font-size: 12px;
+      }
+    </style>
+  </svg>
   `,
   styles: [
   ],
@@ -34,7 +48,9 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.append('g').attr('class', 'title').append('text').attr('class', 'title label');
     this.svg.append('g').attr('class', 'yAxis');
     this.svg.append('g').attr('class', 'xAxis');
-    this.svg.append('g').attr('class', 'yLabel').append('text').attr('class', 'yLabel label');
+    this.svg.append('g').attr('class', 'yLabel')
+      .append('text').attr('class', 'yLabel label')
+      .attr('transform', 'rotate(-90)');
 
     this.svg.append('g').attr('class', 'data');
   }
@@ -43,7 +59,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.select('g.title').attr('transform', `translate(${this.dimensions.midWidth}, ${this.dimensions.midMarginTop})`);
     this.svg.select('g.yAxis').attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
     this.svg.select('g.xAxis').attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginBottom})`);
-    this.svg.select('g.yLabel').attr('transform', `translate(${this.dimensions.marginLeft - 15}, ${this.dimensions.marginTop})`);
+    this.svg.select('g.yLabel').attr('transform', `translate(${12 + 5}, ${this.dimensions.midHeight})`);
     this.svg.select('g.data').attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
   }
 
@@ -123,7 +139,10 @@ export class Chart9Component extends Chart<ISwarmData, any> {
       .style('stroke-dasharray', '2 2');
   }
 
-  setLabels = () => {}
+  setLabels = () => {
+    this.svg.select('text.title').text(this.data.title);
+    this.svg.select('text.yLabel').text(this.data.unit);
+  }
   
   setLegend = () => {}
 

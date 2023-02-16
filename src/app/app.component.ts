@@ -153,8 +153,6 @@ export class AppComponent implements OnInit, OnDestroy {
         'continent',
         'median age (years)',
         1);
-        console.log(this.swarmHelper);
-        
     });
 
     this.subscrtiptions.push(subs);
