@@ -225,3 +225,13 @@ export interface ISwarmData {
   unit: string;
   data: ISwarmDataElement[];
 }
+
+export interface ISimulatedSwarmDataElement extends ISwarmDataElement {
+  cx: number;
+  cy: number;
+  index: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+}

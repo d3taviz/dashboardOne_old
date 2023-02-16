@@ -1,5 +1,5 @@
 import { Component, ElementRef } from '@angular/core';
-import { ISwarmData, ISwarmDataElement } from 'src/app/interfaces/chart.interfaces';
+import { ISimulatedSwarmDataElement, ISwarmData, ISwarmDataElement } from 'src/app/interfaces/chart.interfaces';
 import { DimensionsService } from 'src/app/services/dimensions.service';
 import { Chart } from '../chart';
 import * as d3 from 'd3';
@@ -44,7 +44,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
 
   groups: Array<string | number> = [];
 
-  scaledData: any = [];
+  scaledData: ISimulatedSwarmDataElement[] = [];
 
   setElements = () => {
     this.svg.append('g').attr('class', 'title').append('text').attr('class', 'title label');
@@ -123,14 +123,19 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.scaledData = this.data.data.map((d: ISwarmDataElement) => ({
       ...d,
       cx: this.scales.x(d.category),
-      cy: this.scales.y(d.value)
+      cy: this.scales.y(d.value),
+      index: 0,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0
     }));
   }
 
   setSimulatedData = () => {
     const data = this.scaledData;
 
-    const simulation = d3.forceSimulation<any>(data)
+    const simulation = d3.forceSimulation<ISimulatedSwarmDataElement>(data)
       .force('x', d3.forceX((d: any) => d.cx).strength(0.8))
       .force('y', d3.forceY((d: any) => d.cy).strength(1))
       .force('collide', d3.forceCollide().radius(2))
