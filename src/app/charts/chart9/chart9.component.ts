@@ -31,7 +31,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
   constructor(element: ElementRef, dimensions: DimensionsService, protected legend: ListLegendService) {
     super(element, dimensions);
     console.log(this);
-    
+
   }
 
   protected _defaultConfig: any = {
@@ -56,6 +56,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
       .attr('transform', 'rotate(-90)');
 
     this.svg.append('g').attr('class', 'data');
+    this.legend.host = this.svg.append('g').attr('class', 'legend');
   }
 
   positionElements = () => {
@@ -90,7 +91,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     const domain = d3.groups(this.data.data, (d: ISwarmDataElement) => d.category)
       .map((d: any) => d[0])
       .sort(d3.ascending);
-    
+
     const range = [0, this.dimensions.innerWidth];
 
     this.scales['x'] = d3.scalePoint()
@@ -103,7 +104,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     let [min, max] = d3.extent(this.data.data, (d:ISwarmDataElement) => d.value);
 
     min = Math.min(min || 0, 0);
-    
+
     const domain = [min === undefined ? 0 : min, max === undefined ? 1 : max];
 
     const range = [this.dimensions.innerHeight, 0];
@@ -117,7 +118,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     const range = d3.schemeTableau10;
 
     this.scales.colors = d3.scaleOrdinal<string | number, string>().domain(domain).range(range);
-    
+
   }
 
   setScaledData = () => {
@@ -140,10 +141,10 @@ export class Chart9Component extends Chart<ISwarmData, any> {
       .force('x', d3.forceX((d: any) => d.cx).strength(0.8))
       .force('y', d3.forceY((d: any) => d.cy).strength(1))
       .force('collide', d3.forceCollide().radius(2))
-      .stop(); 
- 
+      .stop();
+
     simulation.tick(50);
-/*     
+/*
       let i = 0;
 
       const interval = setInterval(() => {
@@ -152,8 +153,8 @@ export class Chart9Component extends Chart<ISwarmData, any> {
         simulation.tick();
         this.runSimulation();
       }, 500); */
-  
-    
+
+
   }
 
   runSimulation = () => {
@@ -191,9 +192,26 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.select('text.title').text(this.data.title);
     this.svg.select('text.yLabel').text(this.data.unit);
   }
-  
+
   setLegend = () => {
-    // set the legend items
+    // set the legend data
+    const items = this.groups.map((d: string | number) => ({
+      color: this.scales.colors(d),
+      id: d,
+      label: d + ''
+    }));
+
+    this.legend.data = {
+      items
+    }
+
+    const dims = this.legend.host.node()?.getBoundingClientRect() || new DOMRect();
+
+    this.svg.select('g.legend')
+      .attr('transform', `translate(
+        ${this.dimensions.midWidth - 0.5 * dims.width},
+        ${this.dimensions.bottom - dims.height - 5}
+      )`);
   }
 
   draw = () => {
