@@ -1,9 +1,30 @@
-import { Injectable } from "@angular/core";
+import { EventEmitter, Injectable } from "@angular/core";
 import ObjectHelper from "../helpers/object.helper";
 
 import { Selection } from 'd3-selection';
 
 import * as d3 from 'd3';
+
+export enum LegendActionTypes {
+  LegendItemHighlighted = '[Legend service] item highlighted',
+  LegendItemClicked = '[Legend service] item clicked'
+}
+
+export class LegendItemHighlighted {
+  readonly type = LegendActionTypes.LegendItemHighlighted;
+
+  constructor(public payload: { item: any }) {}
+}
+
+export class LegendItemClicked {
+  readonly type = LegendActionTypes.LegendItemClicked;
+
+  constructor(public payload: { item: any }) {}
+}
+
+
+export type LegendActions = LegendItemHighlighted
+  | LegendItemClicked;
 
 
 @Injectable()
@@ -34,6 +55,10 @@ export abstract class LegendService<D, C> {
     return this._config || this.defaultConfig;
   }
 
+  onLegendAction = new EventEmitter<LegendActions>();
+
+  hiddenIds = new Set();
+
   setItems = () => {
     const data: any = this.getItems();
 
@@ -47,17 +72,14 @@ export abstract class LegendService<D, C> {
     )
     .attr('class', 'legend-item')
 //    .attr('transform', (d: any, i: number) => `translate(${i * width + (i && nodataSeparator || 0)}, 0)`)
-    .on('mouseenter', (event: any, d: any) => {
-      //highlight the legend items
-//      this.highlightLegendItems(d);
-      //highlight the features
-//      this.highlightFeatures(d);
+    .on('mouseenter', (event: MouseEvent, d: any) => {
+      this.onMouseEnter(event, d);
     })
-    .on('mouseleave', () => {
-      //reset the legend items
-  //    this.resetLegendItems();
-      //reset the features
-  //    this.resetFeatures();
+    .on('mouseleave', (event: MouseEvent, d: any) => {
+      this.onMouseLeave(event, d);
+    })
+    .on('click', (event: MouseEvent, d: any) => {
+      this.onMouseClick(event, d);
     });
   }
 
@@ -87,5 +109,9 @@ export abstract class LegendService<D, C> {
   abstract updateItem: (selection: any) => void;
 
   abstract getItems: () => any;
+
+  abstract onMouseEnter: (event: MouseEvent, d: any) => void;
+  abstract onMouseLeave: (event: MouseEvent, d: any) => void;
+  abstract onMouseClick: (event: MouseEvent, d: any) => void;
 
 }

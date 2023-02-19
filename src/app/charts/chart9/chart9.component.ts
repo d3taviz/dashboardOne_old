@@ -4,6 +4,7 @@ import { DimensionsService } from 'src/app/services/dimensions.service';
 import { Chart } from '../chart';
 import * as d3 from 'd3';
 import { ListLegendService } from 'src/app/services/list-legend.service';
+import { LegendActions } from 'src/app/services/legend.service';
 
 @Component({
   selector: 'app-chart9',
@@ -233,5 +234,17 @@ export class Chart9Component extends Chart<ISwarmData, any> {
   }
 
   onSetConfig = () => {}
+
+  override setSubscriptions(): void {
+    super.setSubscriptions();
+
+    const sub = this.legend.onLegendAction.subscribe(this.onLegendAction);
+    this.subscribe(sub);
+  }
+
+  onLegendAction = (action: LegendActions) => {
+    console.log(action);
+
+  }
 
 }
