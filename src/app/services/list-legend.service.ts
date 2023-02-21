@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { ListLegendData, ListLegendItem } from "../interfaces/legend.interfaces";
-import { LegendItemHighlighted, LegendService } from "./legend.service";
+import { LegendItemClicked, LegendItemHighlighted, LegendService } from "./legend.service";
 
 @Injectable()
 export class ListLegendService extends LegendService<ListLegendData, any> {
@@ -40,6 +40,11 @@ export class ListLegendService extends LegendService<ListLegendData, any> {
       .text((d: any) => d.label);
   }
 
+  updateItemStyles = () => {
+    this.host.selectAll<SVGGElement, ListLegendItem>('g.legend-item')
+      .style('opacity', (d: ListLegendItem) => this.hiddenIds.has(d.id) ? 0.3 : null);
+  };
+
   getItems = () => {
     return this.data.items;
   }
@@ -58,5 +63,10 @@ export class ListLegendService extends LegendService<ListLegendData, any> {
       .style('font-weight', '');
   }
 
-  onMouseClick = (event: MouseEvent, data: any) => {}
+  onMouseClick = (event: MouseEvent, data: any) => {
+    this.toggleItem(data.id);
+    this.updateItemStyles();
+    const action = new LegendItemClicked({ item: data.id });
+    this.onLegendAction.emit(action);
+  }
 }

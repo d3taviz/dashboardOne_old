@@ -102,11 +102,16 @@ export abstract class LegendService<D, C> {
     this.repositionItems();
   }
 
+  toggleItem = (id: any) => {
+    this.hiddenIds.has(id) ? this.hiddenIds.delete(id) : this.hiddenIds.add(id);
+  }
+
   abstract onUpdateData: () => void;
   abstract onUpdateConfig: () => void;
 
   abstract generateItem: (selection: any) => void;
   abstract updateItem: (selection: any) => void;
+  abstract updateItemStyles : () => void;
 
   abstract getItems: () => any;
 
