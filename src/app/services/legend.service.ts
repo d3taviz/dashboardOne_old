@@ -4,6 +4,7 @@ import ObjectHelper from "../helpers/object.helper";
 import { Selection } from 'd3-selection';
 
 import * as d3 from 'd3';
+import { LegendConfig } from "../interfaces/legend.interfaces";
 
 export enum LegendActionTypes {
   LegendItemHighlighted = '[Legend service] item highlighted',
@@ -36,7 +37,7 @@ export type LegendActions = LegendItemHighlighted
 
 
 @Injectable()
-export abstract class LegendService<D, C> {
+export abstract class LegendService<D, C extends LegendConfig> {
   host: Selection<SVGGElement, any, any, any> = {} as any;
 
   private _data: D = undefined as any;
@@ -79,6 +80,7 @@ export abstract class LegendService<D, C> {
       .call(this.updateItem)
     )
     .attr('class', 'legend-item')
+    .style('cursor', this.config.item.cursor)
 //    .attr('transform', (d: any, i: number) => `translate(${i * width + (i && nodataSeparator || 0)}, 0)`)
     .on('mouseenter', (event: MouseEvent, d: any) => {
       this.onMouseEnter(event, d);
@@ -94,7 +96,7 @@ export abstract class LegendService<D, C> {
   repositionItems = () => {
     let padding = 0;
 
-    const separator = 10;
+    const separator = this.config.item.separator;
 
     this.host.selectAll('g.legend-item')
       .each((d: any, i: number, items: any) => {
