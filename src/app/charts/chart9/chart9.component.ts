@@ -4,7 +4,7 @@ import { DimensionsService } from 'src/app/services/dimensions.service';
 import { Chart } from '../chart';
 import * as d3 from 'd3';
 import { ListLegendService } from 'src/app/services/list-legend.service';
-import { LegendActions } from 'src/app/services/legend.service';
+import { LegendActions, LegendActionTypes, LegendItemReset } from 'src/app/services/legend.service';
 
 @Component({
   selector: 'app-chart9',
@@ -243,8 +243,32 @@ export class Chart9Component extends Chart<ISwarmData, any> {
   }
 
   onLegendAction = (action: LegendActions) => {
-    console.log(action);
+    switch(action.type) {
+      case LegendActionTypes.LegendItemHighlighted:
+        this.highlightGroup(action.payload.item);
+        break;
+      case LegendActionTypes.LegendItemClicked:
+        break;
+      case LegendActionTypes.LegendItemReset:
+      default:
+        this.resetHighlights();
+        break;
+    }
 
+  }
+
+  // highlight methods
+
+  highlightGroup = (id: string | number) => {
+    if (this.legend.hiddenIds.has(id)) { return; }
+
+    this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
+      .style('opacity', (d: ISimulatedSwarmDataElement) => !this.legend.hiddenIds.has(d.group) && (d.group === id) ? null : 0.3);
+  }
+
+  resetHighlights = () => {
+    this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
+    .style('opacity', (d: ISimulatedSwarmDataElement) => this.legend.hiddenIds.has(d.group) ? 0.3 : null);
   }
 
 }

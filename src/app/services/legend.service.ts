@@ -7,7 +7,8 @@ import * as d3 from 'd3';
 
 export enum LegendActionTypes {
   LegendItemHighlighted = '[Legend service] item highlighted',
-  LegendItemClicked = '[Legend service] item clicked'
+  LegendItemClicked = '[Legend service] item clicked',
+  LegendItemReset = '[Legend service] item reset'
 }
 
 export class LegendItemHighlighted {
@@ -22,9 +23,16 @@ export class LegendItemClicked {
   constructor(public payload: { item: any }) {}
 }
 
+export class LegendItemReset {
+  readonly type = LegendActionTypes.LegendItemReset;
+
+  constructor(public payload: { item: any }) {}
+}
+
 
 export type LegendActions = LegendItemHighlighted
-  | LegendItemClicked;
+  | LegendItemClicked
+  | LegendItemReset;
 
 
 @Injectable()

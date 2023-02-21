@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { ListLegendData, ListLegendItem } from "../interfaces/legend.interfaces";
-import { LegendItemClicked, LegendItemHighlighted, LegendService } from "./legend.service";
+import { LegendItemClicked, LegendItemHighlighted, LegendItemReset, LegendService } from "./legend.service";
 
 @Injectable()
 export class ListLegendService extends LegendService<ListLegendData, any> {
@@ -60,13 +60,49 @@ export class ListLegendService extends LegendService<ListLegendData, any> {
 
   onMouseLeave = (event: MouseEvent, data: any) => {
     this.host.selectAll<SVGGElement, ListLegendItem>('g.legend-item')
-      .style('font-weight', '');
+      .style('font-weight', null);
+
+    const action = new LegendItemReset({ item: data.id });
+
+    this.onLegendAction.emit(action)
   }
 
   onMouseClick = (event: MouseEvent, data: any) => {
-    this.toggleItem(data.id);
+    // this.toggleItem(data.id);
+    this.naturalClick(data.id);
     this.updateItemStyles();
     const action = new LegendItemClicked({ item: data.id });
     this.onLegendAction.emit(action);
+  }
+
+  hideAllOthers = (id: any) => {
+    const ids = this.data.items.filter((item: any) => item.id !== id)
+      .map((item: any) => item.id);
+
+    this.hiddenIds = new Set(ids);
+  }
+
+  reverseHidden = () => {
+    this.data.items.map((item: any) => this.toggleItem(item.id));
+  }
+
+  hiddenIsEmpty = (): boolean => {
+    return this.hiddenIds.size === 0;
+  }
+
+  allOthersHidden = (id: any): boolean => {
+    return !this.hiddenIds.has(id) && this.hiddenIds.size === this.data.items.length - 1;
+  }
+
+  naturalClick = (id: any) => {
+    if (this.hiddenIsEmpty()) {
+      this.hideAllOthers(id);
+    } else {
+      if (this.allOthersHidden(id)) {
+        this.reverseHidden();
+      } else {
+        this.toggleItem(id);
+      }
+    }
   }
 }
