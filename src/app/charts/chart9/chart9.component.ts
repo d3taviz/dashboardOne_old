@@ -58,6 +58,9 @@ export class Chart9Component extends Chart<ISwarmData, any> {
 
     this.svg.append('g').attr('class', 'data');
     this.legend.host = this.svg.append('g').attr('class', 'legend');
+
+    this.svg.select('g.data').append('path').attr('class', 'timeseries')
+      .style('visibility', 'hidden');
   }
 
   positionElements = () => {
@@ -218,14 +221,16 @@ export class Chart9Component extends Chart<ISwarmData, any> {
   draw = () => {
     const data = this.scaledData;
 
-    this.svg.select('g.data').selectAll('circle.data')
+    this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
       .data(data)
       .join('circle')
       .attr('class', 'data')
-      .attr('cx', (d: any) => d.x)
-      .attr('cy', (d: any) => d.y)
+      .attr('cx', (d) => d.x)
+      .attr('cy', (d) => d.y)
       .attr('r', 2)
-      .style('fill', (d: any) => this.scales.colors(d.group));
+      .style('fill', (d) => this.scales.colors(d.group))
+      .on('mouseenter', this.onMouseEnter)
+      .on('mouseleave', this.onMouseLeave);
   }
 
   onSetData = () => {
@@ -268,7 +273,59 @@ export class Chart9Component extends Chart<ISwarmData, any> {
 
   resetHighlights = () => {
     this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
-    .style('opacity', (d: ISimulatedSwarmDataElement) => this.legend.hiddenIds.has(d.group) ? 0.3 : null);
+    .style('opacity', (d: ISimulatedSwarmDataElement) => this.legend.hiddenIds.has(d.group) ? 0.3 : null)
+    .style('stroke', null)
+    .attr('r', 2);
+  }
+
+
+  // item highlight methods
+
+  setLine = (item: ISimulatedSwarmDataElement) => {
+    const line = d3.line<ISimulatedSwarmDataElement>()
+      .x(d => d.x)
+      .y(d => d.y);
+
+    const data = this.scaledData.filter(d => d.id === item.id)
+      .sort((a, b) => a.x - b.x);
+
+    this.svg.select<SVGPathElement>('path.timeseries')
+      .datum(data)
+      .attr('d', line)
+      .style('fill', 'none')
+      .style('stroke', '#000')
+      .style('visibility', 'visible')
+      .raise();
+  }
+
+  onMouseEnter = (event: MouseEvent, item: ISimulatedSwarmDataElement) => {
+    if (this.legend.hiddenIds.has(item.group)) { return; }
+    // highglight corresponding circles
+    this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
+      .style('opacity', (d: ISimulatedSwarmDataElement) => d.id === item.id ? null : 0.3)
+      .style('stroke', (d: ISimulatedSwarmDataElement) => d.id === item.id ? '#000' : null)
+      .attr('r', (d: ISimulatedSwarmDataElement) => d.id === item.id ? 3 : 2);
+
+    //add a line with the timeseries
+    this.setLine(item);
+
+    // raise the highlighted circles to the top position
+    this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
+      .filter((d: ISimulatedSwarmDataElement) => d.id === item.id)
+      .raise();
+
+
+    // set the tooltip
+  }
+
+  onMouseLeave = (event: MouseEvent, item: ISimulatedSwarmDataElement) => {
+    // reset all circles
+    this.resetHighlights();
+
+    // remove the timeseries line
+    this.svg.select('path.timeseries').style('visibility', 'hidden');
+
+    // remove the tooltip
   }
 
 }
