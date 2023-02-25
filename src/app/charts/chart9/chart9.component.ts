@@ -70,6 +70,9 @@ export class Chart9Component extends Chart<ISwarmData, any> {
 
     this.tooltip.host = this.svg.append('g').attr('class', 'tooltip-service')
       .style('visibility', 'hidden');
+
+    this.svg.append('g').attr('class', 'voronoi')
+      .style('pointer-events', 'all');
   }
 
   positionElements = () => {
@@ -78,6 +81,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.select('g.xAxis').attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginBottom})`);
     this.svg.select('g.yLabel').attr('transform', `translate(${12 + 5}, ${this.dimensions.midHeight})`);
     this.svg.select('g.data').attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
+    this.svg.select('g.voronoi').attr('transform', `translate(${this.dimensions.marginLeft}, ${this.dimensions.marginTop})`);
   }
 
   setParams = () => {
@@ -228,18 +232,46 @@ export class Chart9Component extends Chart<ISwarmData, any> {
   }
 
   draw = () => {
+   this.drawCircles();
+   this.drawVoronoi();
+  }
+
+  drawCircles = () => {
     const data = this.scaledData;
 
     this.svg.select('g.data').selectAll<SVGCircleElement, ISimulatedSwarmDataElement>('circle.data')
+    .data(data)
+    .join('circle')
+    .attr('class', 'data')
+    .attr('cx', (d) => d.x)
+    .attr('cy', (d) => d.y)
+    .attr('r', 2)
+    .style('fill', (d) => this.scales.colors(d.group));
+  }
+
+  drawVoronoi = () => {
+    const data = this.scaledData.filter(d => !this.legend.hiddenIds.has(d.group));
+
+    const delaunay = d3.Delaunay.from<ISimulatedSwarmDataElement>(data, d => d.x, d => d.y);
+
+/*     this.svg.select('g.data').append('path').attr('class', 'delaunay')
+      .attr('d', delaunay.render())
+      .style('fill', 'none')
+      .style('stroke', '#000'); */
+
+    const voronoi = delaunay.voronoi([0, 0, this.dimensions.innerWidth, this.dimensions.innerHeight]);
+
+    this.svg.select('g.voronoi')
+      .selectAll('path.voronoi-cell')
       .data(data)
-      .join('circle')
-      .attr('class', 'data')
-      .attr('cx', (d) => d.x)
-      .attr('cy', (d) => d.y)
-      .attr('r', 2)
-      .style('fill', (d) => this.scales.colors(d.group))
-      .on('mouseenter', this.onMouseEnter)
-      .on('mouseleave', this.onMouseLeave);
+      .join('path')
+        .attr('class', 'voronoi-cell')
+        .attr('d', (d, i) => voronoi.renderCell(i))
+        .style('fill', 'none')
+  //      .style('stroke', 'red')
+        .on('mouseenter', this.onMouseEnter)
+        .on('mouseleave', this.onMouseLeave);
+
   }
 
   onSetData = () => {
@@ -262,9 +294,9 @@ export class Chart9Component extends Chart<ISwarmData, any> {
         this.highlightGroup(action.payload.item);
         break;
       case LegendActionTypes.LegendItemClicked:
-        break;
       case LegendActionTypes.LegendItemReset:
       default:
+        this.drawVoronoi();
         this.resetHighlights();
         break;
     }
