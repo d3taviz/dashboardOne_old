@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Selection } from 'd3-selection';
 import ObjectHelper from "../helpers/object.helper";
-import { ITooltipConfig, ITooltipData } from "../interfaces/tooltip.interfaces";
+import { ITooltipConfig, ITooltipData, ITooltipPosition, XTooltipPosition, YTooltipPosition } from "../interfaces/tooltip.interfaces";
 
 @Injectable()
 export class TooltipService {
@@ -82,7 +82,8 @@ export class TooltipService {
   }
 
   set host(host: Selection<SVGGElement, any, any, any>) {
-    this._host = host;
+    this._host = host
+      .style('pointer-events', 'none');
     this._host.html(this.template);
   }
 
@@ -90,15 +91,20 @@ export class TooltipService {
     return this._host;
   }
 
-  private _position: {x: number; y: number} = {x: 0, y: 0};
+  private _position: ITooltipPosition = {
+    x: 0,
+    y: 0,
+    xPosition: XTooltipPosition.right,
+    yPosition: YTooltipPosition.middle
+  };
 
-  set position(position: {x: number; y: number}) {
-    this._position = position;
+  set position(position: Partial<ITooltipPosition>) {
+    this._position = ObjectHelper.UpdateObjectWithPartialValues(this._position, position);
 
     this.moveTooltip();
   }
 
-  get position() {
+  get position(): ITooltipPosition {
     return this._position;
   }
 
@@ -151,6 +157,63 @@ export class TooltipService {
   onUpdateConfig = () => {}
 
   protected moveTooltip = () => {
-    this.host.attr('transform', `translate(${this.position.x}, ${this.position.y})`);
+    const x = this.position.x + this.config.background.xPadding + this.xPadding();
+    const y = this.position.y + this.config.background.yPadding + this.yPadding();;
+
+    this.host.attr('transform', `translate(${x}, ${y})`);
+  }
+
+  protected xPadding = (): number => {
+    const dims = this.host.node()?.getBoundingClientRect() || new DOMRect();
+    let padding: number;
+
+    switch(this.position.xPosition) {
+      case XTooltipPosition.left:
+        padding = -(dims.width + this.config.offset.x);
+        break;
+      case XTooltipPosition.middle:
+        padding = -0.5 * dims.width;
+        break;
+      case XTooltipPosition.right:
+      default:
+        padding = this.config.offset.x;
+        break;
+    }
+
+    return padding;
+  }
+
+  protected yPadding = (): number => {
+    const dims = this.host.node()?.getBoundingClientRect() || new DOMRect();
+    let padding: number;
+
+    switch(this.position.yPosition) {
+      case YTooltipPosition.top:
+        padding = -dims.height - this.config.offset.y;
+        break;
+      case YTooltipPosition.middle:
+        padding = -0.5 * dims.height;
+        break;
+      case YTooltipPosition.bottom:
+      default:
+        padding = this.config.offset.y;
+        break;
+    }
+
+    return padding;
+  }
+
+  hide = () => {
+    this.host
+      .transition()
+      .delay(600)
+      .style('visibility', 'hidden');
+  }
+
+  show = () => {
+    this.host
+      .transition()
+      .duration(1)
+      .style('visibility', 'visible');
   }
 }

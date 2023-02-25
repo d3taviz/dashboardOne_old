@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import { ListLegendService } from 'src/app/services/list-legend.service';
 import { LegendActions, LegendActionTypes } from 'src/app/services/legend.service';
 import { TooltipService } from 'src/app/services/tooltip.service';
+import { XTooltipPosition, YTooltipPosition } from 'src/app/interfaces/tooltip.interfaces';
 
 @Component({
   selector: 'app-chart9',
@@ -335,6 +336,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.select('path.timeseries').style('visibility', 'hidden');
 
     // remove the tooltip
+    this.tooltip.hide();
   }
 
   // tooltip methods
@@ -351,15 +353,30 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.moveTooltip(event);
 
     // show the tooltip
-    this.svg.select('g.tooltip-service').style('visibility', 'visible');
+    this.tooltip.show();
   }
 
   moveTooltip = (event: MouseEvent) => {
     const coords = d3.pointer(event, this.svg.node());
 
-    const position = { x: coords[0], y: coords[1] };
+    const position = {
+      x: coords[0],
+      y: coords[1],
+      xPosition: this.xTooltipAlignment(coords[0]),
+      yPosition: YTooltipPosition.middle
+    };
 
     this.tooltip.position = position;
+  }
+
+  xTooltipAlignment = (x: number): XTooltipPosition => {
+/*     if (x > this.dimensions.midWidth) {
+      return XTooltipPosition.left;
+    } else {
+      return XTooltipPosition.right;
+    } */
+
+    return x > this.dimensions.midWidth ? XTooltipPosition.left : XTooltipPosition.right;
   }
 
 }
