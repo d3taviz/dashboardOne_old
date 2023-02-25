@@ -5,6 +5,7 @@ import { Chart } from '../chart';
 import * as d3 from 'd3';
 import { ListLegendService } from 'src/app/services/list-legend.service';
 import { LegendActions, LegendActionTypes } from 'src/app/services/legend.service';
+import { TooltipService } from 'src/app/services/tooltip.service';
 
 @Component({
   selector: 'app-chart9',
@@ -26,10 +27,14 @@ import { LegendActions, LegendActionTypes } from 'src/app/services/legend.servic
   `,
   styles: [
   ],
-  providers: [DimensionsService, ListLegendService]
+  providers: [DimensionsService, ListLegendService, TooltipService]
 })
 export class Chart9Component extends Chart<ISwarmData, any> {
-  constructor(element: ElementRef, dimensions: DimensionsService, protected legend: ListLegendService) {
+  constructor(element: ElementRef,
+    dimensions: DimensionsService,
+    protected legend: ListLegendService,
+    protected tooltip: TooltipService
+  ) {
     super(element, dimensions);
     console.log(this);
 
@@ -60,6 +65,9 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.legend.host = this.svg.append('g').attr('class', 'legend');
 
     this.svg.select('g.data').append('path').attr('class', 'timeseries')
+      .style('visibility', 'hidden');
+
+    this.tooltip.host = this.svg.append('g').attr('class', 'tooltip-service')
       .style('visibility', 'hidden');
   }
 
@@ -316,6 +324,7 @@ export class Chart9Component extends Chart<ISwarmData, any> {
 
 
     // set the tooltip
+    this.setTooltip(event, item);
   }
 
   onMouseLeave = (event: MouseEvent, item: ISimulatedSwarmDataElement) => {
@@ -326,6 +335,31 @@ export class Chart9Component extends Chart<ISwarmData, any> {
     this.svg.select('path.timeseries').style('visibility', 'hidden');
 
     // remove the tooltip
+  }
+
+  // tooltip methods
+  setTooltip = (event: MouseEvent, item: ISimulatedSwarmDataElement) => {
+    // set the data
+    this.tooltip.data = {
+      title: item.category + '',
+      color: this.scales.colors(item.group),
+      key: item.label,
+      value: item.value
+    };
+
+    // position the tooltip
+    this.moveTooltip(event);
+
+    // show the tooltip
+    this.svg.select('g.tooltip-service').style('visibility', 'visible');
+  }
+
+  moveTooltip = (event: MouseEvent) => {
+    const coords = d3.pointer(event, this.svg.node());
+
+    const position = { x: coords[0], y: coords[1] };
+
+    this.tooltip.position = position;
   }
 
 }

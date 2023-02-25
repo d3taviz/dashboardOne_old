@@ -3,7 +3,8 @@ import { Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges } from '
 import * as d3 from 'd3';
 import { ChartDimensions } from 'src/app/helpers/chart.dimensions.helper';
 import ObjectHelper from 'src/app/helpers/object.helper';
-import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem, IGroupStackRectData, ITooltipData } from 'src/app/interfaces/chart.interfaces';
+import { IGroupStackConfig, IGroupStackData, IGroupStackDataElem, IGroupStackRectData } from 'src/app/interfaces/chart.interfaces';
+import { ITooltipData } from 'src/app/interfaces/tooltip.interfaces';
 
 @Component({
   selector: 'app-chart7',
@@ -135,11 +136,18 @@ export class Chart7Component implements OnInit, OnChanges {
         rx: 3,
         ry: 3
       },
+      title: {
+        fontSize: 12,
+        fontWeight: 'bold'
+      },
       labels: {
         symbolSize: 6,
         fontSize: 30,
         height: 30,
         textSeparator: 10
+      },
+      value: {
+        fontWeight: 'bold',
       },
       symbol: {
         width: 6,
